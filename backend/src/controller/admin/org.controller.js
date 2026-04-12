@@ -1,0 +1,101 @@
+import {
+  createDepartmentForLocation,
+  createLocation,
+  getDepartments,
+  getLocations,
+  getManagersByLocation,
+} from '../../services/org.service.js'
+
+export const listAdminLocations = async (req, res) => {
+  try {
+    const data = await getLocations({ actorId: req.user.sub })
+
+    return res.json({
+      success: true,
+      message: 'Locations fetched successfully.',
+      data,
+    })
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || 'Failed to fetch locations.',
+    })
+  }
+}
+
+export const createAdminLocation = async (req, res) => {
+  try {
+    const data = await createLocation({ actorId: req.user.sub, payload: req.body })
+
+    return res.status(201).json({
+      success: true,
+      message: 'Location created successfully.',
+      data,
+    })
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || 'Failed to create location.',
+    })
+  }
+}
+
+export const listAdminDepartments = async (req, res) => {
+  try {
+    const data = await getDepartments({
+      actorId: req.user.sub,
+      plantOfficeId: req.query.plant_office_id,
+    })
+
+    return res.json({
+      success: true,
+      message: 'Departments fetched successfully.',
+      data,
+    })
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || 'Failed to fetch departments.',
+    })
+  }
+}
+
+export const createAdminDepartment = async (req, res) => {
+  try {
+    const data = await createDepartmentForLocation({
+      actorId: req.user.sub,
+      payload: req.body,
+    })
+
+    return res.status(201).json({
+      success: true,
+      message: 'Department added to location successfully.',
+      data,
+    })
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || 'Failed to add department.',
+    })
+  }
+}
+
+export const listAdminManagersByLocation = async (req, res) => {
+  try {
+    const data = await getManagersByLocation({
+      actorId: req.user.sub,
+      plantOfficeId: req.query.plant_office_id,
+    })
+
+    return res.json({
+      success: true,
+      message: 'Managers fetched successfully.',
+      data,
+    })
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || 'Failed to fetch managers.',
+    })
+  }
+}

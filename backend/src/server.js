@@ -5,7 +5,9 @@ import { supabase } from './config/supabase.js'
 import authRoute from './route/common/auth.route.js'
 import adminRoute from './route/admin/admin.route.js'
 import adminUserRoute from './route/admin/user.route.js'
+import adminOrgRoute from './route/admin/org.route.js'
 import hrUserRoute from './route/hr/user.route.js'
+import platformSetupRoute from './route/platform/setup.route.js'
 
 const app = express()
 const port = process.env.PORT || 4000
@@ -18,8 +20,10 @@ app.use(
 app.use(express.json())
 
 app.use('/api/auth', authRoute)
+app.use('/api/platform/setup', platformSetupRoute)
 app.use('/api/admin', adminRoute)
 app.use('/api/admin', adminUserRoute)
+app.use('/api/admin', adminOrgRoute)
 app.use('/api/hr', hrUserRoute)
 
 async function checkSupabaseConnection() {

@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard,
+  Building2,
   Users,
 } from 'lucide-react'
 
@@ -16,6 +17,13 @@ const NAV_GROUPS = {
     {
       title: 'Overview',
       items: [{ to: '/dashboard/admin', label: 'Dashboard', icon: LayoutDashboard }],
+    },
+    {
+      title: 'Organization',
+      items: [
+        { to: '/admin/organization/locations', label: 'Locations', icon: Building2 },
+        { to: '/admin/organization/departments', label: 'Departments', icon: Building2 },
+      ],
     },
     {
       title: 'People',

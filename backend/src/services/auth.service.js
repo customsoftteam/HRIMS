@@ -35,6 +35,7 @@ export const loginWithPassword = async ({ email, password }) => {
     sub: employee.id,
     email: employee.email,
     role: employee.role,
+    company_id: employee.company_id,
   })
 
   return {

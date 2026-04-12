@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ShieldCheck, LockKeyhole, Sparkles } from 'lucide-react'
 import { API_BASE_URL } from '../utils/api.js'
 import {
@@ -159,6 +159,13 @@ function LoginPage() {
 
               <p className="mt-6 text-sm text-black/55">
                 After login, you will be redirected to the correct dashboard automatically.
+              </p>
+
+              <p className="mt-2 text-sm text-black/55">
+                First-time onboarding?{' '}
+                <Link to="/setup/company-admin" className="font-medium text-black underline underline-offset-4">
+                  Create company and admin
+                </Link>
               </p>
             </div>
           </div>
