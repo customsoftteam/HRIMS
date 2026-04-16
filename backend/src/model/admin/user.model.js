@@ -3,7 +3,7 @@ import { supabase } from '../../config/supabase.js'
 export const findEmployeeByEmail = async (email) => {
   return supabase
     .from('employees')
-    .select('id, employee_code, first_name, last_name, email, role, status, password_hash, company_id, created_at, updated_at')
+    .select('id, employee_code, first_name, last_name, email, role, status, password_hash, company_id, designation_id, created_at, updated_at')
     .eq('email', email.trim().toLowerCase())
     .maybeSingle()
 }
@@ -11,7 +11,7 @@ export const findEmployeeByEmail = async (email) => {
 export const findEmployeeById = async (id) => {
   return supabase
     .from('employees')
-    .select('id, employee_code, first_name, last_name, email, role, status, phone, password_hash, company_id, manager_employee_id, created_at, updated_at')
+    .select('id, employee_code, first_name, last_name, email, role, status, phone, password_hash, company_id, designation_id, manager_employee_id, created_at, updated_at')
     .eq('id', id)
     .maybeSingle()
 }
@@ -36,7 +36,7 @@ export const deleteEmployeeRecord = async (id) => {
 export const listEmployeeRecords = async ({ role } = {}) => {
   let query = supabase
     .from('employees')
-    .select('id, employee_code, first_name, last_name, email, role, status, phone, company_id, manager_employee_id, created_at, updated_at')
+    .select('id, employee_code, first_name, last_name, email, role, status, phone, company_id, designation_id, manager_employee_id, created_at, updated_at')
     .order('created_at', { ascending: false })
 
   if (role) {
@@ -49,7 +49,7 @@ export const listEmployeeRecords = async ({ role } = {}) => {
 export const listEmployeeRecordsByCompany = async ({ companyId, role } = {}) => {
   let query = supabase
     .from('employees')
-    .select('id, employee_code, first_name, last_name, email, role, status, phone, company_id, manager_employee_id, created_at, updated_at')
+    .select('id, employee_code, first_name, last_name, email, role, status, phone, company_id, designation_id, manager_employee_id, created_at, updated_at')
     .eq('company_id', companyId)
     .order('created_at', { ascending: false })
 
@@ -107,6 +107,17 @@ export const getDepartmentMetadataByIds = async (ids = []) => {
   return supabase
     .from('departments')
     .select('id, company_id, name, code')
+    .in('id', ids)
+}
+
+export const getDesignationMetadataByIds = async (ids = []) => {
+  if (!ids.length) {
+    return { data: [], error: null }
+  }
+
+  return supabase
+    .from('designations')
+    .select('id, name')
     .in('id', ids)
 }
 

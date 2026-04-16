@@ -3,10 +3,15 @@ import express from 'express'
 import cors from 'cors'
 import { supabase } from './config/supabase.js'
 import authRoute from './route/common/auth.route.js'
+import profileRoute from './route/common/profile.route.js'
+import catalogRoute from './route/common/catalog.route.js'
 import adminRoute from './route/admin/admin.route.js'
 import adminUserRoute from './route/admin/user.route.js'
 import adminOrgRoute from './route/admin/org.route.js'
 import hrUserRoute from './route/hr/user.route.js'
+import hrRoute from './route/hr/hr.route.js'
+import managerRoute from './route/manager/manager.route.js'
+import employeeRoute from './route/employee/employee.route.js'
 import platformSetupRoute from './route/platform/setup.route.js'
 
 const app = express()
@@ -20,11 +25,16 @@ app.use(
 app.use(express.json())
 
 app.use('/api/auth', authRoute)
+app.use('/api/profile', profileRoute)
+app.use('/api/catalog', catalogRoute)
 app.use('/api/platform/setup', platformSetupRoute)
 app.use('/api/admin', adminRoute)
 app.use('/api/admin', adminUserRoute)
 app.use('/api/admin', adminOrgRoute)
+app.use('/api/hr', hrRoute)
 app.use('/api/hr', hrUserRoute)
+app.use('/api/manager', managerRoute)
+app.use('/api/employee', employeeRoute)
 
 async function checkSupabaseConnection() {
   const configured = Boolean(

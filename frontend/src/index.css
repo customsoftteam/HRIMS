@@ -12,8 +12,8 @@ body {
 
 @layer base {
   .theme {
-    --font-heading: var(--font-sans);
     --font-sans: 'Geist Variable', sans-serif;
+    --font-heading: 'Geist Variable', sans-serif;
   }
   :root {
     --background: oklch(1 0 0);
@@ -86,9 +86,26 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    background:
+      radial-gradient(circle at top left, rgb(255 255 255 / 0.92), transparent 26%),
+      radial-gradient(circle at top right, rgb(230 232 240 / 0.65), transparent 28%),
+      linear-gradient(180deg, #fafafa 0%, #f4f4f5 48%, #ededf2 100%);
+    min-height: 100vh;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    text-rendering: optimizeLegibility;
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
+  }
+
+  .field-input {
+    @apply w-full rounded-2xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-950/5;
+  }
+
+  ::selection {
+    background: rgb(24 24 27 / 0.88);
+    color: white;
   }
 }

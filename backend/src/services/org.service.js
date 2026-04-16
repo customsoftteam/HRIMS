@@ -2,8 +2,15 @@ import {
   createDepartmentRecord,
   createLocationDepartmentRecord,
   createLocationRecord,
+  deleteDepartmentRecord,
+  deleteLocationDepartmentRecord,
+  deleteLocationRecord,
   findDepartmentByCompanyAndName,
+  findLocationDepartmentById,
   findLocationById,
+  updateDepartmentRecord,
+  updateLocationDepartmentRecord,
+  updateLocationRecord,
   listDepartmentsByCompanyAndLocation,
   listLocationsByCompany,
   listManagersByCompanyAndLocation,
@@ -65,6 +72,55 @@ export const createLocation = async ({ actorId, payload }) => {
   return data
 }
 
+export const updateLocation = async ({ actorId, locationId, payload }) => {
+  const actor = await getActor(actorId)
+  const { data: location, error: locationError } = await findLocationById(locationId)
+
+  if (locationError) {
+    throw createHttpError(locationError.message, 500)
+  }
+
+  if (!location || location.company_id !== actor.company_id) {
+    throw createHttpError('Location not found.', 404)
+  }
+
+  const { data, error } = await updateLocationRecord(locationId, {
+    name: payload.name?.trim() || location.name,
+    code: payload.code?.trim() || null,
+    location: payload.location?.trim() || null,
+    address: payload.address?.trim() || null,
+    timezone: payload.timezone?.trim() || null,
+    is_active: payload.is_active ?? location.is_active,
+  })
+
+  if (error) {
+    throw createHttpError(error.message, 500)
+  }
+
+  return data
+}
+
+export const deleteLocation = async ({ actorId, locationId }) => {
+  const actor = await getActor(actorId)
+  const { data: location, error: locationError } = await findLocationById(locationId)
+
+  if (locationError) {
+    throw createHttpError(locationError.message, 500)
+  }
+
+  if (!location || location.company_id !== actor.company_id) {
+    throw createHttpError('Location not found.', 404)
+  }
+
+  const { data, error } = await deleteLocationRecord(locationId)
+
+  if (error) {
+    throw createHttpError(error.message, 500)
+  }
+
+  return data
+}
+
 export const getDepartments = async ({ actorId, plantOfficeId }) => {
   const actor = await getActor(actorId)
   const { data, error } = await listDepartmentsByCompanyAndLocation({
@@ -84,6 +140,7 @@ export const getDepartments = async ({ actorId, plantOfficeId }) => {
     department_id: row.department?.id || null,
     department_name: row.department?.name || null,
     department_code: row.department?.code || null,
+    department_description: row.department?.description || null,
   }))
 }
 
@@ -147,6 +204,76 @@ export const createDepartmentForLocation = async ({ actorId, payload }) => {
     ...mapping,
     department,
   }
+}
+
+export const updateDepartmentForLocation = async ({ actorId, mappingId, payload }) => {
+  const actor = await getActor(actorId)
+  const { data: mapping, error: mappingError } = await findLocationDepartmentById(mappingId)
+
+  if (mappingError) {
+    throw createHttpError(mappingError.message, 500)
+  }
+
+  if (!mapping || mapping.company_id !== actor.company_id) {
+    throw createHttpError('Department mapping not found.', 404)
+  }
+
+  const { data: location, error: locationError } = await findLocationById(payload.plant_office_id || mapping.plant_office_id)
+
+  if (locationError) {
+    throw createHttpError(locationError.message, 500)
+  }
+
+  if (!location || location.company_id !== actor.company_id) {
+    throw createHttpError('Invalid location for this company.', 403)
+  }
+
+  const currentDepartmentName = payload.department_name?.trim() || mapping.department?.name || null
+  const { data: department, error: departmentError } = await updateDepartmentRecord(mapping.department_id, {
+    name: currentDepartmentName,
+    code: payload.department_code?.trim() || null,
+    description: payload.department_description?.trim() || null,
+    is_active: payload.is_active ?? mapping.is_active,
+  })
+
+  if (departmentError) {
+    throw createHttpError(departmentError.message, 500)
+  }
+
+  const { data: updatedMapping, error: updatedMappingError } = await updateLocationDepartmentRecord(mappingId, {
+    plant_office_id: payload.plant_office_id || mapping.plant_office_id,
+    is_active: payload.is_active ?? mapping.is_active,
+  })
+
+  if (updatedMappingError) {
+    throw createHttpError(updatedMappingError.message, 500)
+  }
+
+  return {
+    ...updatedMapping,
+    department,
+  }
+}
+
+export const deleteDepartmentForLocation = async ({ actorId, mappingId }) => {
+  const actor = await getActor(actorId)
+  const { data: mapping, error: mappingError } = await findLocationDepartmentById(mappingId)
+
+  if (mappingError) {
+    throw createHttpError(mappingError.message, 500)
+  }
+
+  if (!mapping || mapping.company_id !== actor.company_id) {
+    throw createHttpError('Department mapping not found.', 404)
+  }
+
+  const { data, error } = await deleteLocationDepartmentRecord(mappingId)
+
+  if (error) {
+    throw createHttpError(error.message, 500)
+  }
+
+  return data
 }
 
 export const getManagersByLocation = async ({ actorId, plantOfficeId }) => {

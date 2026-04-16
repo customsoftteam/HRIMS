@@ -55,8 +55,8 @@ function DashboardLayout({ role, title, subtitle, stats, highlights, children })
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto flex min-h-screen max-w-[1480px]">
+    <div className="h-screen overflow-hidden bg-background text-foreground">
+      <div className="mx-auto flex h-screen max-w-[1480px] overflow-hidden">
         <div className="hidden md:block">
           <SidebarNav role={role} collapsed={sidebarCollapsed} />
         </div>
@@ -75,7 +75,7 @@ function DashboardLayout({ role, title, subtitle, stats, highlights, children })
           </>
         )}
 
-        <div className="flex min-h-screen flex-1 flex-col">
+        <div className="flex h-screen flex-1 flex-col overflow-hidden">
           <header className="sticky top-0 z-30 border-b border-black/10 bg-black text-white shadow-lg shadow-black/10">
             <div className="flex items-center justify-between px-4 py-3 md:px-8">
               <div className="flex items-center gap-3">
@@ -119,10 +119,38 @@ function DashboardLayout({ role, title, subtitle, stats, highlights, children })
             </div>
           </header>
 
-          <main className="flex-1 bg-[#f4f4f5] p-4 md:p-8">
+          <main className="flex-1 overflow-y-auto bg-[#f4f4f5] p-4 md:p-8">
             {children ? (
-              <div className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm shadow-black/5">
-                {children}
+              <div className="space-y-6">
+                {stats?.length ? (
+                  <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {stats.map((item) => (
+                      <StatCard
+                        key={item.label}
+                        label={item.label}
+                        value={item.value}
+                        tone={item.tone}
+                      />
+                    ))}
+                  </section>
+                ) : null}
+
+                {highlights?.length ? (
+                  <section className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm shadow-black/5">
+                    <h2 className="text-lg font-semibold text-black">Dashboard Highlights</h2>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      {highlights.map((item) => (
+                        <div key={item} className="rounded-xl border border-black/10 bg-white p-4 text-sm text-black/80">
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
+
+                <section className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm shadow-black/5">
+                  {children}
+                </section>
               </div>
             ) : (
               <>

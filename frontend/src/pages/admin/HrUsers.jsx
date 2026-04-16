@@ -9,6 +9,7 @@ const EMPTY_FORM = {
   email: '',
   phone: '',
   password: '',
+  designation_name: '',
   plant_office_id: '',
   department_id: '',
   manager_employee_id: '',
@@ -113,6 +114,7 @@ function HrUsersPage() {
     else if (!EMAIL_REGEX.test(form.email.trim())) errors.email = 'Enter a valid email address.'
     if (!form.plant_office_id) errors.plant_office_id = 'Location is required.'
     if (!form.department_id) errors.department_id = 'Department is required.'
+    if (!form.designation_name.trim()) errors.designation_name = 'Designation is required.'
     if (!editingId && !form.password) errors.password = 'Password is required for new users.'
     else if (form.password && !PASSWORD_REGEX.test(form.password)) errors.password = 'Password must be at least 8 characters and include letters and numbers.'
     setValidationErrors(errors)
@@ -152,6 +154,7 @@ function HrUsersPage() {
       email: row.email || '',
       phone: row.phone || '',
       password: '',
+      designation_name: row.designation?.name || '',
       plant_office_id: row.assignment?.location?.plant_office_id || '',
       department_id: row.assignment?.department?.department_id || '',
       manager_employee_id: row.manager_employee_id || '',
@@ -228,19 +231,27 @@ function HrUsersPage() {
           <p className="mt-2 text-sm text-black/60">Create HR users with location and department assignment.</p>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <div className="space-y-6">
           <section className="rounded-2xl border border-black/10 bg-[#fafafa] p-4">
             <h3 className="text-lg font-semibold text-black">{editingId ? 'Edit HR User' : 'Create HR User'}</h3>
-            <form onSubmit={handleSubmit} className="mt-4 grid gap-3 md:grid-cols-2" noValidate>
-              <div><input value={form.first_name} onChange={handleChange('first_name')} placeholder="First name" className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm" />{validationErrors.first_name ? <p className="mt-1 text-xs text-rose-700">{validationErrors.first_name}</p> : null}</div>
-              <div><input value={form.last_name} onChange={handleChange('last_name')} placeholder="Last name" className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm" />{validationErrors.last_name ? <p className="mt-1 text-xs text-rose-700">{validationErrors.last_name}</p> : null}</div>
-              <div className="md:col-span-2"><input type="email" value={form.email} onChange={handleChange('email')} placeholder="Email" className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm" />{validationErrors.email ? <p className="mt-1 text-xs text-rose-700">{validationErrors.email}</p> : null}</div>
-              <div><input value={form.phone} onChange={handleChange('phone')} placeholder="Phone" className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm" /></div>
-              <div><input type="password" value={form.password} onChange={handleChange('password')} placeholder={editingId ? 'New password (optional)' : 'Password'} className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm" />{validationErrors.password ? <p className="mt-1 text-xs text-rose-700">{validationErrors.password}</p> : <p className="mt-1 text-xs text-black/45">Min 8 chars with letters and numbers.</p>}</div>
-              <div><select value={form.plant_office_id} onChange={handleChange('plant_office_id')} className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"><option value="">Select location</option>{locations.map((row) => <option key={row.id} value={row.id}>{row.name}</option>)}</select>{validationErrors.plant_office_id ? <p className="mt-1 text-xs text-rose-700">{validationErrors.plant_office_id}</p> : null}</div>
-              <div><select value={form.department_id} onChange={handleChange('department_id')} className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"><option value="">Select department</option>{departments.map((row) => <option key={row.id} value={row.department_id}>{row.department_name}</option>)}</select>{validationErrors.department_id ? <p className="mt-1 text-xs text-rose-700">{validationErrors.department_id}</p> : null}</div>
-              <div className="md:col-span-2"><select value={form.manager_employee_id} onChange={handleChange('manager_employee_id')} className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"><option value="">Optional manager</option>{managers.map((row) => <option key={row.id} value={row.id}>{row.first_name} {row.last_name || ''}</option>)}</select></div>
-              <div className="md:col-span-2 flex gap-2">
+            <form onSubmit={handleSubmit} className="mt-4 grid gap-3" noValidate>
+              <input value={form.first_name} onChange={handleChange('first_name')} placeholder="First name" className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm" />
+              <input value={form.last_name} onChange={handleChange('last_name')} placeholder="Last name" className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm" />
+              <div className="md:col-span-2">
+                <input type="email" value={form.email} onChange={handleChange('email')} placeholder="Email" className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm" />
+                {validationErrors.email ? <p className="mt-1 text-xs text-rose-700">{validationErrors.email}</p> : null}
+              </div>
+              <input value={form.phone} onChange={handleChange('phone')} placeholder="Phone" className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm" />
+              <input type="password" value={form.password} onChange={handleChange('password')} placeholder={editingId ? 'New password (optional)' : 'Password'} className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm" />
+              <div className="md:col-span-2">
+                <p className="mt-1 text-xs text-black/45">Min 8 chars with letters and numbers.</p>
+                {validationErrors.password ? <p className="mt-1 text-xs text-rose-700">{validationErrors.password}</p> : null}
+              </div>
+              <select value={form.plant_office_id} onChange={handleChange('plant_office_id')} className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"><option value="">Select location</option>{locations.map((row) => <option key={row.id} value={row.id}>{row.name}</option>)}</select>
+              <select value={form.department_id} onChange={handleChange('department_id')} className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"><option value="">Select department</option>{departments.map((row) => <option key={row.id} value={row.department_id}>{row.department_name}</option>)}</select>
+              <input value={form.designation_name} onChange={handleChange('designation_name')} placeholder="Designation" className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm" />
+              <select value={form.manager_employee_id} onChange={handleChange('manager_employee_id')} className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"><option value="">Optional manager</option>{managers.map((row) => <option key={row.id} value={row.id}>{row.first_name} {row.last_name || ''}</option>)}</select>
+              <div className="md:col-span-2 flex gap-2 pt-1">
                 <button type="submit" disabled={saving} className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white">{saving ? 'Saving...' : editingId ? 'Update User' : 'Create User'}</button>
                 {editingId ? <button type="button" onClick={resetForm} className="rounded-xl border border-black/15 px-4 py-2 text-sm">Cancel</button> : null}
               </div>
@@ -257,20 +268,22 @@ function HrUsersPage() {
                 <thead className="bg-[#f8f8fa] text-left text-black/70">
                   <tr>
                     <th className="px-4 py-3 font-semibold">User</th>
+                    <th className="px-4 py-3 font-semibold">Designation</th>
                     <th className="px-4 py-3 font-semibold">Location</th>
                     <th className="px-4 py-3 font-semibold">Department</th>
                     <th className="px-4 py-3 font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/5">
-                  {loading ? <tr><td colSpan={4} className="px-4 py-4 text-black/50">Loading...</td></tr> : filteredRows.length ? filteredRows.map((row) => (
+                  {loading ? <tr><td colSpan={5} className="px-4 py-4 text-black/50">Loading...</td></tr> : filteredRows.length ? filteredRows.map((row) => (
                     <tr key={row.id}>
                       <td className="px-4 py-3">{row.first_name} {row.last_name || ''}<div className="text-xs text-black/50">{row.email}</div></td>
+                      <td className="px-4 py-3">{row.designation?.name || '-'}</td>
                       <td className="px-4 py-3">{row.assignment?.location?.metadata?.name || '-'}</td>
                       <td className="px-4 py-3">{row.assignment?.department?.metadata?.name || '-'}</td>
                       <td className="px-4 py-3"><div className="flex gap-2"><button onClick={() => handleEdit(row)} className="rounded-lg border border-black/15 px-3 py-1 text-xs">Edit</button><button onClick={() => openTransfer(row)} className="rounded-lg border border-blue-200 px-3 py-1 text-xs text-blue-700">Transfer</button><button onClick={() => handleDelete(row.id)} className="rounded-lg border border-rose-200 px-3 py-1 text-xs text-rose-700">Delete</button></div></td>
                     </tr>
-                  )) : <tr><td colSpan={4} className="px-4 py-4 text-black/50">No HR users found.</td></tr>}
+                  )) : <tr><td colSpan={5} className="px-4 py-4 text-black/50">No HR users found.</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -281,11 +294,11 @@ function HrUsersPage() {
           <section className="rounded-2xl border border-black/10 bg-white p-4">
             <h3 className="text-lg font-semibold text-black">Transfer User</h3>
             <p className="mt-1 text-sm text-black/60">{transferTarget.first_name} {transferTarget.last_name || ''}</p>
-            <form onSubmit={handleTransfer} className="mt-4 grid gap-3 md:grid-cols-3">
+            <form onSubmit={handleTransfer} className="mt-4 grid gap-3">
               <select value={transfer.plant_office_id} onChange={(event) => setTransfer((current) => ({ ...current, plant_office_id: event.target.value, department_id: '' }))} className="rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"><option value="">Select location</option>{locations.map((row) => <option key={row.id} value={row.id}>{row.name}</option>)}</select>
               <select value={transfer.department_id} onChange={(event) => setTransfer((current) => ({ ...current, department_id: event.target.value }))} className="rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"><option value="">Select department</option>{departments.map((row) => <option key={row.id} value={row.department_id}>{row.department_name}</option>)}</select>
               <input type="date" value={transfer.effective_date} onChange={(event) => setTransfer((current) => ({ ...current, effective_date: event.target.value }))} className="rounded-xl border border-black/10 bg-white px-3 py-2 text-sm" />
-              <div className="md:col-span-3 flex gap-2">
+              <div className="flex gap-2">
                 <button type="submit" disabled={transferSaving} className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white">{transferSaving ? 'Transferring...' : 'Transfer User'}</button>
                 <button type="button" onClick={() => setTransferTarget(null)} className="rounded-xl border border-black/15 px-4 py-2 text-sm">Cancel</button>
               </div>

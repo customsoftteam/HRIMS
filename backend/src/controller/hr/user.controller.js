@@ -25,7 +25,7 @@ export const createHrEmployee = async (req, res) => {
   }
 }
 
-export const getHrEmployees = async (_req, res) => {
+export const getHrEmployees = async (req, res) => {
   try {
     const users = await listUsers({
       role: 'employee',

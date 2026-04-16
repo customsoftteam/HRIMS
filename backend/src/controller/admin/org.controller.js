@@ -1,9 +1,13 @@
 import {
   createDepartmentForLocation,
   createLocation,
+  deleteDepartmentForLocation,
+  deleteLocation,
   getDepartments,
   getLocations,
   getManagersByLocation,
+  updateDepartmentForLocation,
+  updateLocation,
 } from '../../services/org.service.js'
 
 export const listAdminLocations = async (req, res) => {
@@ -36,6 +40,47 @@ export const createAdminLocation = async (req, res) => {
     return res.status(error.statusCode || 500).json({
       success: false,
       message: error.message || 'Failed to create location.',
+    })
+  }
+}
+
+export const updateAdminLocation = async (req, res) => {
+  try {
+    const data = await updateLocation({
+      actorId: req.user.sub,
+      locationId: req.params.id,
+      payload: req.body,
+    })
+
+    return res.json({
+      success: true,
+      message: 'Location updated successfully.',
+      data,
+    })
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || 'Failed to update location.',
+    })
+  }
+}
+
+export const deleteAdminLocation = async (req, res) => {
+  try {
+    const data = await deleteLocation({
+      actorId: req.user.sub,
+      locationId: req.params.id,
+    })
+
+    return res.json({
+      success: true,
+      message: 'Location removed successfully.',
+      data,
+    })
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || 'Failed to remove location.',
     })
   }
 }
@@ -76,6 +121,47 @@ export const createAdminDepartment = async (req, res) => {
     return res.status(error.statusCode || 500).json({
       success: false,
       message: error.message || 'Failed to add department.',
+    })
+  }
+}
+
+export const updateAdminDepartment = async (req, res) => {
+  try {
+    const data = await updateDepartmentForLocation({
+      actorId: req.user.sub,
+      mappingId: req.params.id,
+      payload: req.body,
+    })
+
+    return res.json({
+      success: true,
+      message: 'Department updated successfully.',
+      data,
+    })
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || 'Failed to update department.',
+    })
+  }
+}
+
+export const deleteAdminDepartment = async (req, res) => {
+  try {
+    const data = await deleteDepartmentForLocation({
+      actorId: req.user.sub,
+      mappingId: req.params.id,
+    })
+
+    return res.json({
+      success: true,
+      message: 'Department removed successfully.',
+      data,
+    })
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || 'Failed to remove department.',
     })
   }
 }

@@ -8,6 +8,7 @@ import {
   deleteEmployeeRecord,
   findEmployeeByEmail,
   findEmployeeById,
+  getDesignationMetadataByIds,
   getActiveDepartmentAssignmentsByEmployeeIds,
   getActiveLocationAssignmentsByEmployeeIds,
   getActiveLocationAssignmentsForEmployee,
@@ -19,6 +20,11 @@ import {
 } from '../model/admin/user.model.js'
 import { hashPassword } from '../utils/password.js'
 import { sanitizeEmployee } from '../utils/user.js'
+import {
+  createDesignationRecord,
+  findDesignationByCompanyAndName,
+  findDesignationById,
+} from '../model/admin/org.model.js'
 
 const createHttpError = (message, statusCode) => {
   const error = new Error(message)
@@ -86,6 +92,14 @@ const enrichUsersWithAssignments = async (users) => {
 
   const locationMap = new Map((locationsResult.data || []).map((row) => [row.id, row]))
   const departmentMap = new Map((departmentsResult.data || []).map((row) => [row.id, row]))
+  const designationIds = [...new Set(users.map((row) => row.designation_id).filter(Boolean))]
+  const designationResult = await getDesignationMetadataByIds(designationIds)
+
+  if (designationResult.error) {
+    throw createHttpError(designationResult.error.message, 500)
+  }
+
+  const designationMap = new Map((designationResult.data || []).map((row) => [row.id, row]))
   const locationAssignmentMap = new Map(locationAssignments.map((row) => [row.employee_id, row]))
   const departmentAssignmentMap = new Map(departmentAssignments.map((row) => [row.employee_id, row]))
 
@@ -110,8 +124,45 @@ const enrichUsersWithAssignments = async (users) => {
             }
           : null,
       },
+      designation: user.designation_id ? designationMap.get(user.designation_id) || null : null,
     }
   })
+}
+
+const resolveDesignationId = async ({ companyId, designation_name }) => {
+  if (!designation_name?.trim()) {
+    return null
+  }
+
+  const normalizedName = designation_name.trim()
+  const { data: existingDesignation, error: existingDesignationError } = await findDesignationByCompanyAndName({
+    companyId,
+    name: normalizedName,
+  })
+
+  if (existingDesignationError) {
+    throw createHttpError(existingDesignationError.message, 500)
+  }
+
+  if (existingDesignation) {
+    return existingDesignation.id
+  }
+
+  const { data: newDesignation, error: createDesignationError } = await createDesignationRecord({
+    company_id: companyId,
+    name: normalizedName,
+    plant_office_id: null,
+    department_id: null,
+    code: null,
+    description: null,
+    is_active: true,
+  })
+
+  if (createDesignationError) {
+    throw createHttpError(createDesignationError.message, 500)
+  }
+
+  return newDesignation.id
 }
 
 export const createUser = async (payload) => {
@@ -131,6 +182,8 @@ export const createUser = async (payload) => {
     manager_employee_id = null,
     actor_id,
     actor_role,
+    designation_id,
+    designation_name,
   } = payload
 
   if (!first_name || !email || !password) {
@@ -173,6 +226,26 @@ export const createUser = async (payload) => {
   }
 
   const password_hash = await hashPassword(password)
+  let designationId = null
+
+  if (designation_id) {
+    const { data: selectedDesignation, error: selectedDesignationError } = await findDesignationById(designation_id)
+
+    if (selectedDesignationError) {
+      throw createHttpError(selectedDesignationError.message, 500)
+    }
+
+    if (!selectedDesignation || selectedDesignation.company_id !== companyId) {
+      throw createHttpError('Designation not found for this company.', 404)
+    }
+
+    designationId = selectedDesignation.id
+  } else {
+    designationId = await resolveDesignationId({
+      companyId,
+      designation_name,
+    })
+  }
 
   const employeePayload = {
     employee_code: employee_code || `EMP-${randomUUID().slice(0, 8).toUpperCase()}`,
@@ -184,6 +257,7 @@ export const createUser = async (payload) => {
     phone,
     password_hash,
     company_id: companyId,
+    designation_id: designationId,
     manager_employee_id,
   }
 
@@ -334,6 +408,29 @@ export const updateUser = async ({ id, payload, allowedRoles }) => {
 
   if (payload.manager_employee_id !== undefined) {
     updatePayload.manager_employee_id = payload.manager_employee_id
+  }
+
+  if (payload.designation_id !== undefined) {
+    if (!payload.designation_id) {
+      updatePayload.designation_id = null
+    } else {
+      const { data: selectedDesignation, error: selectedDesignationError } = await findDesignationById(payload.designation_id)
+
+      if (selectedDesignationError) {
+        throw createHttpError(selectedDesignationError.message, 500)
+      }
+
+      if (!selectedDesignation || selectedDesignation.company_id !== existingUser.company_id) {
+        throw createHttpError('Designation not found for this company.', 404)
+      }
+
+      updatePayload.designation_id = selectedDesignation.id
+    }
+  } else if (payload.designation_name !== undefined) {
+    updatePayload.designation_id = await resolveDesignationId({
+      companyId: existingUser.company_id,
+      designation_name: payload.designation_name,
+    })
   }
 
   const { data, error } = await updateEmployeeRecord(id, updatePayload)

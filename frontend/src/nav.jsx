@@ -3,6 +3,10 @@ import {
   LayoutDashboard,
   Building2,
   Users,
+  BadgeCheck,
+  ListTodo,
+  FolderKanban,
+  ClipboardCheck,
 } from 'lucide-react'
 
 const ROLE_LABELS = {
@@ -33,6 +37,13 @@ const NAV_GROUPS = {
         { to: '/admin/people/employee', label: 'Employee', icon: Users },
       ],
     },
+    {
+      title: 'Catalog',
+      items: [
+        { to: '/admin/catalog/designations', label: 'Designations', icon: BadgeCheck },
+        { to: '/admin/catalog/responsibilities', label: 'Responsibilities', icon: ListTodo },
+      ],
+    },
   ],
   hr: [
     {
@@ -43,17 +54,43 @@ const NAV_GROUPS = {
       title: 'People',
       items: [{ to: '/hr/people/employee', label: 'Employee', icon: Users }],
     },
+    {
+      title: 'Catalog',
+      items: [
+        { to: '/hr/catalog/designations', label: 'Designations', icon: BadgeCheck },
+        { to: '/hr/catalog/responsibilities', label: 'Responsibilities', icon: ListTodo },
+      ],
+    },
   ],
   manager: [
     {
       title: 'Overview',
       items: [{ to: '/dashboard/manager', label: 'Dashboard', icon: LayoutDashboard }],
     },
+    {
+      title: 'Projects',
+      items: [
+        { to: '/manager/projects', label: 'Projects', icon: FolderKanban },
+        { to: '/manager/tasks', label: 'Tasks', icon: ClipboardCheck },
+      ],
+    },
+    {
+      title: 'Catalog',
+      items: [
+        { to: '/manager/catalog/designations', label: 'Designations', icon: BadgeCheck },
+        { to: '/manager/catalog/responsibilities', label: 'Responsibilities', icon: ListTodo },
+      ],
+    },
   ],
   employee: [
     {
       title: 'Overview',
-      items: [{ to: '/dashboard/employee', label: 'Dashboard', icon: LayoutDashboard }],
+      items: [
+        { to: '/dashboard/employee', label: 'Dashboard', icon: LayoutDashboard },
+        { to: '/employee/projects', label: 'Projects', icon: FolderKanban },
+        { to: '/employee/tasks', label: 'Tasks', icon: ClipboardCheck },
+        { to: '/employee/profile', label: 'Profile', icon: Users },
+      ],
     },
   ],
 }
@@ -62,7 +99,7 @@ function SidebarNav({ role = 'employee', onNavigate, collapsed = false }) {
   const groups = NAV_GROUPS[role] ?? NAV_GROUPS.employee
 
   return (
-    <aside className={`flex h-full flex-col border-r border-white/10 bg-black p-4 text-white shadow-2xl shadow-black/30 transition-all duration-200 ${collapsed ? 'w-20' : 'w-72'}`}>
+    <aside className={`flex h-full flex-col overflow-hidden border-r border-white/10 bg-black p-4 text-white shadow-2xl shadow-black/30 transition-all duration-200 ${collapsed ? 'w-20' : 'w-72'}`}>
       <div className="mb-8 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
         {collapsed ? (
           <p className="text-center text-xs font-semibold text-white/70">HR</p>
