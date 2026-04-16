@@ -279,7 +279,23 @@ function ProjectsList() {
 
                   <div className="grid gap-3 px-5 py-4 sm:grid-cols-2">
                     <InfoTile label="Teams" value={project.team_count || 0} />
-                    <InfoTile label="Manager" value={project.manager ? `${project.manager.first_name || ''} ${project.manager.last_name || ''}`.trim() : 'Unassigned'} />
+                    <InfoTile
+                      label="Manager"
+                      value={project.manager ? (
+                        <div className="flex items-center gap-2">
+                          {project.manager.profile_picture_url ? (
+                            <img src={project.manager.profile_picture_url} alt={`${project.manager.first_name || ''} ${project.manager.last_name || ''}`.trim() || 'Manager'} className="size-7 rounded-full border border-zinc-200 object-cover" />
+                          ) : (
+                            <div className="flex size-7 items-center justify-center rounded-full border border-zinc-200 bg-white text-[10px] font-semibold text-zinc-500">
+                              {`${project.manager.first_name || ''}${project.manager.last_name || ''}`.trim().slice(0, 1).toUpperCase() || 'M'}
+                            </div>
+                          )}
+                          <span>{`${project.manager.first_name || ''} ${project.manager.last_name || ''}`.trim()}</span>
+                        </div>
+                      ) : (
+                        'Unassigned'
+                      )}
+                    />
                     <InfoTile label="Start" value={project.start_date ? new Date(project.start_date).toLocaleDateString() : 'NA'} />
                     <InfoTile label="End" value={project.end_date ? new Date(project.end_date).toLocaleDateString() : 'NA'} />
                   </div>

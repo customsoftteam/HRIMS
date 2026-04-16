@@ -6,6 +6,23 @@ export const saveAuthSession = (token, user) => {
   localStorage.setItem(USER_KEY, JSON.stringify(user))
 }
 
+export const updateAuthUser = (updates) => {
+  const currentUser = getAuthUser()
+
+  if (!currentUser) {
+    return null
+  }
+
+  const nextUser = { ...currentUser, ...updates }
+  localStorage.setItem(USER_KEY, JSON.stringify(nextUser))
+  return nextUser
+}
+
+export const getAuthUserProfilePictureUrl = () => {
+  const user = getAuthUser()
+  return user?.profile_picture_url || null
+}
+
 export const clearAuthSession = () => {
   localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(USER_KEY)

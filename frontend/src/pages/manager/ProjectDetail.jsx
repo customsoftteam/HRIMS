@@ -271,13 +271,26 @@ const ProjectDetail = () => {
 
         {project ? (
           <section className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
-            <div className="grid gap-2 md:grid-cols-3 text-sm">
+            <div className="grid gap-2 text-sm md:grid-cols-4">
               <div className="rounded-lg bg-zinc-100 px-3 py-2">Status: {project.status}</div>
               <div className="rounded-lg bg-zinc-100 px-3 py-2">
                 Start: {project.start_date ? new Date(project.start_date).toLocaleDateString() : 'NA'}
               </div>
               <div className="rounded-lg bg-zinc-100 px-3 py-2">
                 End: {project.end_date ? new Date(project.end_date).toLocaleDateString() : 'NA'}
+              </div>
+              <div className="flex items-center gap-3 rounded-lg bg-zinc-100 px-3 py-2">
+                {project.manager?.profile_picture_url ? (
+                  <img src={project.manager.profile_picture_url} alt={`${project.manager.first_name || ''} ${project.manager.last_name || ''}`.trim() || 'Manager'} className="size-8 rounded-full border border-zinc-200 object-cover" />
+                ) : (
+                  <div className="flex size-8 items-center justify-center rounded-full border border-zinc-200 bg-white text-[10px] font-semibold text-zinc-500">
+                    {`${project.manager?.first_name || ''}${project.manager?.last_name || ''}`.trim().slice(0, 1).toUpperCase() || 'M'}
+                  </div>
+                )}
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Manager</p>
+                  <p className="text-sm font-medium text-zinc-900">{project.manager ? `${project.manager.first_name || ''} ${project.manager.last_name || ''}`.trim() : 'Unassigned'}</p>
+                </div>
               </div>
             </div>
             {project.description ? <p className="mt-4 text-sm text-black/70">{project.description}</p> : null}
@@ -370,12 +383,21 @@ const ProjectDetail = () => {
             <div className="grid gap-4 md:grid-cols-2">
               {projectMembers.map((member) => (
                 <article key={member.id} className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
-                  <div className="space-y-1">
-                    <h3 className="text-base font-semibold text-black">
-                      {member.employee?.first_name} {member.employee?.last_name}
-                    </h3>
-                    <p className="text-xs text-black/60">{member.employee?.employee_code || 'NA'}</p>
-                    <p className="text-sm text-black/70">{member.employee?.email}</p>
+                  <div className="flex items-center gap-3">
+                    {member.employee?.profile_picture_url ? (
+                      <img src={member.employee.profile_picture_url} alt={`${member.employee?.first_name || ''} ${member.employee?.last_name || ''}`.trim() || 'Member'} className="size-12 rounded-full border border-black/10 object-cover" />
+                    ) : (
+                      <div className="flex size-12 items-center justify-center rounded-full border border-black/10 bg-[#f5f6fa] text-sm font-semibold text-black/60">
+                        {`${member.employee?.first_name || ''}${member.employee?.last_name || ''}`.trim().slice(0, 1).toUpperCase() || 'U'}
+                      </div>
+                    )}
+                    <div className="space-y-1">
+                      <h3 className="text-base font-semibold text-black">
+                        {member.employee?.first_name} {member.employee?.last_name}
+                      </h3>
+                      <p className="text-xs text-black/60">{member.employee?.employee_code || 'NA'}</p>
+                      <p className="text-sm text-black/70">{member.employee?.email}</p>
+                    </div>
                   </div>
 
                   <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
@@ -421,11 +443,12 @@ const ProjectDetail = () => {
                   {team.description ? <p className="mt-3 text-sm text-black/70">{team.description}</p> : null}
 
                   {team.creator ? (
-                    <p className="mt-3 text-xs text-black/60">
-                      Created by:
-                      {' '}
-                          {team.creator.first_name} {team.creator.last_name}
-                    </p>
+                    <div className="mt-3 flex items-center gap-2 text-xs text-black/60">
+                      {team.creator.profile_picture_url ? <img src={team.creator.profile_picture_url} alt={`${team.creator.first_name || ''} ${team.creator.last_name || ''}`.trim() || 'Creator'} className="size-6 rounded-full border border-black/10 object-cover" /> : null}
+                      <p>
+                        Created by: {team.creator.first_name} {team.creator.last_name}
+                      </p>
+                    </div>
                   ) : null}
 
                   <div className="mt-4 flex gap-2">

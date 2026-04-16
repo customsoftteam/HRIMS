@@ -28,6 +28,7 @@ import {
   getActiveDepartmentAssignmentsByEmployeeIds,
   getDepartmentMetadataByIds,
   getDesignationMetadataByIds,
+  getProfileDetailsByEmployeeIds,
 } from '../model/admin/user.model.js'
 
 const createHttpError = (message, statusCode) => {
@@ -113,6 +114,20 @@ const getEmployeeMetaMap = async (employees = []) => {
   return metaMap
 }
 
+const getEmployeeProfileMap = async (employeeIds = []) => {
+  if (!employeeIds.length) {
+    return new Map()
+  }
+
+  const { data, error } = await getProfileDetailsByEmployeeIds(employeeIds)
+
+  if (error) {
+    throw createHttpError(error.message, 500)
+  }
+
+  return new Map((data || []).map((row) => [row.employee_id, row.personal_details?.profile_picture_url || null]))
+}
+
 // ============================================================================
 // PROJECTS Service
 // ============================================================================
@@ -139,6 +154,7 @@ export const getProjectsList = async ({ actorId, role }) => {
   const enriched = await Promise.all(
     projects.map(async (project) => {
       const managerResult = await findEmployeeById(project.manager_employee_id)
+      const managerProfileMap = await getEmployeeProfileMap(project.manager_employee_id ? [project.manager_employee_id] : [])
       const teamResult = await listTeamsByProject(project.id)
 
       const manager = !managerResult.error && managerResult.data ? managerResult.data : null
@@ -152,6 +168,7 @@ export const getProjectsList = async ({ actorId, role }) => {
               first_name: manager.first_name,
               last_name: manager.last_name,
               email: manager.email,
+              profile_picture_url: managerProfileMap.get(manager.id) || null,
             }
           : null,
         team_count: teams.length,
@@ -181,6 +198,7 @@ export const getProjectDetail = async ({ projectId, actorId, role }) => {
 
   const managerResult = await findEmployeeById(project.manager_employee_id)
   const manager = !managerResult.error && managerResult.data ? managerResult.data : null
+  const managerProfileMap = await getEmployeeProfileMap(project.manager_employee_id ? [project.manager_employee_id] : [])
 
   const teamsResult = await listTeamsByProject(projectId)
   const teams = !teamsResult.error && teamsResult.data ? teamsResult.data : []
@@ -204,6 +222,7 @@ export const getProjectDetail = async ({ projectId, actorId, role }) => {
           first_name: manager.first_name,
           last_name: manager.last_name,
           email: manager.email,
+          profile_picture_url: managerProfileMap.get(manager.id) || null,
         }
       : null,
     teams: enrichedTeams,
@@ -242,6 +261,7 @@ export const getProjectMembers = async ({ projectId, actorId, role }) => {
 
   const employeeMap = new Map(employeeRows.map((row) => [row.id, row]))
   const employeeMetaMap = await getEmployeeMetaMap(employeeRows)
+  const employeeProfileMap = await getEmployeeProfileMap(employeeRows.map((row) => row.id))
 
   const enriched = (members || []).map((member) => {
     const employee = employeeMap.get(member.employee_id) || null
@@ -256,6 +276,7 @@ export const getProjectMembers = async ({ projectId, actorId, role }) => {
             last_name: employee.last_name,
             email: employee.email,
             employee_code: employee.employee_code,
+            profile_picture_url: employeeProfileMap.get(employee.id) || null,
             department: employeeMeta?.department || null,
             designation: employeeMeta?.designation || null,
           }
@@ -455,6 +476,7 @@ export const getTeamsList = async ({ projectId, actorId, role }) => {
 
       const creatorResult = await findEmployeeById(team.created_by_id)
       const creator = !creatorResult.error && creatorResult.data ? creatorResult.data : null
+      const creatorProfileMap = await getEmployeeProfileMap(creator ? [creator.id] : [])
 
       return {
         ...team,
@@ -464,6 +486,7 @@ export const getTeamsList = async ({ projectId, actorId, role }) => {
               first_name: creator.first_name,
               last_name: creator.last_name,
               email: creator.email,
+              profile_picture_url: creatorProfileMap.get(creator.id) || null,
             }
           : null,
         member_count: members.length,
@@ -613,6 +636,7 @@ export const getTeamMembers = async ({ teamId, actorId, role }) => {
 
   const employeeMap = new Map(employeeRows.map((row) => [row.id, row]))
   const employeeMetaMap = await getEmployeeMetaMap(employeeRows)
+  const employeeProfileMap = await getEmployeeProfileMap(employeeRows.map((row) => row.id))
 
   const enriched = (members || []).map((member) => {
     const employee = employeeMap.get(member.employee_id) || null
@@ -627,6 +651,7 @@ export const getTeamMembers = async ({ teamId, actorId, role }) => {
             last_name: employee.last_name,
             email: employee.email,
             employee_code: employee.employee_code,
+            profile_picture_url: employeeProfileMap.get(employee.id) || null,
             department: employeeMeta?.department || null,
             designation: employeeMeta?.designation || null,
           }
@@ -692,6 +717,7 @@ export const getEligibleTeamEmployees = async ({ teamId, actorId, role }) => {
   ).filter(Boolean)
 
   const employeeMetaMap = await getEmployeeMetaMap(employeeRows)
+  const employeeProfileMap = await getEmployeeProfileMap(employeeRows.map((row) => row.id))
   const employeeMap = new Map(employeeRows.map((row) => [row.id, row]))
 
   const employees = employeeIds.map((employeeId) => {
@@ -709,6 +735,7 @@ export const getEligibleTeamEmployees = async ({ teamId, actorId, role }) => {
         last_name: employee.last_name,
         email: employee.email,
         employee_code: employee.employee_code,
+        profile_picture_url: employeeProfileMap.get(employee.id) || null,
         department: employeeMeta.department,
         designation: employeeMeta.designation,
         project_member_role: projectMembership?.member_role || null,

@@ -1,10 +1,15 @@
 import 'dotenv/config'
 import express from 'express'
+import { createServer } from 'node:http'
 import cors from 'cors'
+import { Server as SocketIOServer } from 'socket.io'
 import { supabase } from './config/supabase.js'
 import authRoute from './route/common/auth.route.js'
 import profileRoute from './route/common/profile.route.js'
 import catalogRoute from './route/common/catalog.route.js'
+import chatRoute from './route/common/chat.route.js'
+import leaveRoute from './route/common/leave.route.js'
+import updatesRoute from './route/common/updates.route.js'
 import adminRoute from './route/admin/admin.route.js'
 import adminUserRoute from './route/admin/user.route.js'
 import adminOrgRoute from './route/admin/org.route.js'
@@ -13,9 +18,22 @@ import hrRoute from './route/hr/hr.route.js'
 import managerRoute from './route/manager/manager.route.js'
 import employeeRoute from './route/employee/employee.route.js'
 import platformSetupRoute from './route/platform/setup.route.js'
+import { registerChatSocket } from './socket/chat.socket.js'
+import { setIOInstance } from './socket/io.instance.js'
 
 const app = express()
+const httpServer = createServer(app)
 const port = process.env.PORT || 4000
+const socketCorsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173'
+const io = new SocketIOServer(httpServer, {
+  cors: {
+    origin: socketCorsOrigin,
+    methods: ['GET', 'POST'],
+  },
+})
+
+registerChatSocket(io)
+setIOInstance(io)
 
 app.use(
   cors({
@@ -27,6 +45,9 @@ app.use(express.json())
 app.use('/api/auth', authRoute)
 app.use('/api/profile', profileRoute)
 app.use('/api/catalog', catalogRoute)
+app.use('/api/chat', chatRoute)
+app.use('/api/leave', leaveRoute)
+app.use('/api/updates', updatesRoute)
 app.use('/api/platform/setup', platformSetupRoute)
 app.use('/api/admin', adminRoute)
 app.use('/api/admin', adminUserRoute)
@@ -110,7 +131,7 @@ app.get('/api/supabase-status', async (_req, res) => {
   })
 })
 
-app.listen(port, async () => {
+httpServer.listen(port, async () => {
   console.log(`Backend running on http://localhost:${port}`)
 
   const status = await checkSupabaseConnection()

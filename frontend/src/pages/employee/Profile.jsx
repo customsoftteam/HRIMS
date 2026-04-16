@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import DashboardLayout from '../../components/dashboard-layout.jsx'
 import { API_BASE_URL } from '../../utils/api.js'
-import { getAuthToken } from '../../utils/auth.js'
+import { getAuthToken, getAuthUser, updateAuthUser } from '../../utils/auth.js'
 
 const MARITAL_STATUS_OPTIONS = ['Single', 'Married', 'Divorced', 'Widowed', 'Separated']
 const BLOOD_GROUP_OPTIONS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
@@ -10,6 +10,7 @@ const EMPLOYEE_TYPE_OPTIONS = ['Permanent', 'Contract', 'Intern', 'Consultant', 
 
 const EMPTY_FORM = {
   personal_details: {
+    profile_picture_url: '',
     date_of_birth: '',
     gender: '',
     mobile_number: '',
@@ -56,7 +57,16 @@ const SECTION_TITLES = {
   health_details: 'Health Details',
 }
 
+const ROLE_LABELS = {
+  admin: 'Admin',
+  hr: 'HR',
+  manager: 'Manager',
+  employee: 'Employee',
+}
+
 function EmployeeProfilePage() {
+  const authUser = getAuthUser()
+  const role = authUser?.role || 'employee'
   const [form, setForm] = useState(EMPTY_FORM)
   const [profileExists, setProfileExists] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -70,6 +80,7 @@ function EmployeeProfilePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
 
@@ -153,6 +164,54 @@ function EmployeeProfilePage() {
     }))
   }
 
+  const handleAvatarUpload = async (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setUploadingAvatar(true)
+    setErrorMessage('')
+    setSuccessMessage('')
+
+    try {
+      const body = new FormData()
+      body.append('avatar', file)
+
+      const response = await fetch(`${API_BASE_URL}/api/profile/me/avatar`, {
+        method: 'POST',
+        headers: authHeaders,
+        body,
+      })
+
+      const payload = await response.json()
+      if (!response.ok) {
+        throw new Error(payload?.message || 'Failed to upload profile picture.')
+      }
+
+      if (payload?.data?.profile) {
+        hydrateFromPayload({ data: payload.data.profile })
+        const avatarUrl = payload.data.avatar_url || payload.data.profile?.profile?.personal_details?.profile_picture_url || null
+        const nextUser = updateAuthUser({ profile_picture_url: avatarUrl })
+        if (nextUser?.profile_picture_url) {
+          window.dispatchEvent(new CustomEvent('hrims-profile-updated', { detail: { profile_picture_url: nextUser.profile_picture_url } }))
+        }
+      } else {
+        await fetchProfile()
+      }
+
+      setSuccessMessage('Profile picture uploaded successfully.')
+    } catch (error) {
+      setErrorMessage(error.message)
+    } finally {
+      setUploadingAvatar(false)
+      event.target.value = ''
+    }
+  }
+
+  const profilePictureUrl = form.personal_details.profile_picture_url || ''
+  const displayName = `${employeeBasics?.first_name || authUser?.first_name || ''} ${employeeBasics?.last_name || authUser?.last_name || ''}`.trim() || 'User'
+  const dashboardTitle = `${ROLE_LABELS[role] || 'Employee'} Dashboard`
+  const profileSubtitle = role === 'employee' ? 'Profile' : 'My Profile'
+
   const handleSubmit = async (event) => {
     event.preventDefault()
     setSaving(true)
@@ -222,15 +281,37 @@ function EmployeeProfilePage() {
 
   if (loading) {
     return (
-      <DashboardLayout role="employee" title="Employee Dashboard" subtitle="Profile">
+      <DashboardLayout role={role} title={dashboardTitle} subtitle={profileSubtitle}>
         <div className="rounded-2xl border border-black/10 bg-white p-6 text-sm text-black/60">Loading profile...</div>
       </DashboardLayout>
     )
   }
 
   return (
-    <DashboardLayout role="employee" title="Employee Dashboard" subtitle="Profile">
+    <DashboardLayout role={role} title={dashboardTitle} subtitle={profileSubtitle}>
       <div className="space-y-6">
+        <section className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm shadow-black/5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              {profilePictureUrl ? (
+                <img src={profilePictureUrl} alt="Profile" className="size-20 rounded-full border border-black/10 object-cover" />
+              ) : (
+                <div className="flex size-20 items-center justify-center rounded-full border border-black/10 bg-[#f5f6fa] text-2xl font-semibold text-black/50">
+                  {displayName.slice(0, 1).toUpperCase()}
+                </div>
+              )}
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-black/40">Profile Picture</p>
+                <p className="mt-1 text-sm text-black/70">Upload a photo to appear across people directory tables.</p>
+              </div>
+            </div>
+            <label className="inline-flex cursor-pointer items-center rounded-xl border border-black/15 px-4 py-2 text-sm font-semibold text-black transition hover:bg-black hover:text-white">
+              {uploadingAvatar ? 'Uploading...' : 'Upload Photo'}
+              <input type="file" accept="image/*" onChange={handleAvatarUpload} disabled={uploadingAvatar} className="hidden" />
+            </label>
+          </div>
+        </section>
+
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-black/40">My Profile</p>
@@ -319,6 +400,7 @@ function EmployeeProfilePage() {
               </div>
             ) : (
               <ReadOnlyGrid items={[
+                ['Profile picture URL', form.personal_details.profile_picture_url],
                 ['Date of birth', form.personal_details.date_of_birth],
                 ['Gender', form.personal_details.gender],
                 ['Mobile number', form.personal_details.mobile_number],

@@ -121,6 +121,17 @@ export const getDesignationMetadataByIds = async (ids = []) => {
     .in('id', ids)
 }
 
+export const getProfileDetailsByEmployeeIds = async (employeeIds = []) => {
+  if (!employeeIds.length) {
+    return { data: [], error: null }
+  }
+
+  return supabase
+    .from('employee_profiles')
+    .select('employee_id, personal_details')
+    .in('employee_id', employeeIds)
+}
+
 export const createLocationAssignmentRecord = async (payload) => {
   return supabase.from('user_location_assignments').insert(payload).select('*').single()
 }

@@ -14,6 +14,7 @@ import {
   getActiveLocationAssignmentsForEmployee,
   getDepartmentMetadataByIds,
   getLocationMetadataByIds,
+  getProfileDetailsByEmployeeIds,
   listEmployeeRecords,
   listEmployeeRecordsByCompany,
   updateEmployeeRecord,
@@ -58,9 +59,10 @@ const getActorContext = async ({ actorId }) => {
 const enrichUsersWithAssignments = async (users) => {
   const employeeIds = users.map((row) => row.id)
 
-  const [locationResult, departmentResult] = await Promise.all([
+  const [locationResult, departmentResult, profileDetailsResult] = await Promise.all([
     getActiveLocationAssignmentsByEmployeeIds(employeeIds),
     getActiveDepartmentAssignmentsByEmployeeIds(employeeIds),
+    getProfileDetailsByEmployeeIds(employeeIds),
   ])
 
   if (locationResult.error) {
@@ -69,6 +71,10 @@ const enrichUsersWithAssignments = async (users) => {
 
   if (departmentResult.error) {
     throw createHttpError(departmentResult.error.message, 500)
+  }
+
+  if (profileDetailsResult.error) {
+    throw createHttpError(profileDetailsResult.error.message, 500)
   }
 
   const locationAssignments = locationResult.data || []
@@ -102,14 +108,17 @@ const enrichUsersWithAssignments = async (users) => {
   const designationMap = new Map((designationResult.data || []).map((row) => [row.id, row]))
   const locationAssignmentMap = new Map(locationAssignments.map((row) => [row.employee_id, row]))
   const departmentAssignmentMap = new Map(departmentAssignments.map((row) => [row.employee_id, row]))
+  const profileDetailsMap = new Map((profileDetailsResult.data || []).map((row) => [row.employee_id, row.personal_details || {}]))
 
   return users.map((user) => {
     const safeUser = sanitizeEmployee(user)
     const locationAssignment = locationAssignmentMap.get(user.id) || null
     const departmentAssignment = departmentAssignmentMap.get(user.id) || null
+    const personalDetails = profileDetailsMap.get(user.id) || {}
 
     return {
       ...safeUser,
+      profile_picture_url: personalDetails.profile_picture_url || null,
       assignment: {
         location: locationAssignment
           ? {

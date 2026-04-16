@@ -5,6 +5,7 @@ import {
   findProfileByEmployeeId,
   updateProfileRecordByEmployeeId,
 } from '../model/common/profile.model.js'
+import { cloudinary, isCloudinaryConfigured } from '../config/cloudinary.js'
 
 const createHttpError = (message, statusCode) => {
   const error = new Error(message)
@@ -32,6 +33,31 @@ const ensurePlainObject = (value, sectionName) => {
   }
 
   return value
+}
+
+const uploadBufferToCloudinary = async ({ buffer, employeeId }) => {
+  if (!isCloudinaryConfigured()) {
+    throw createHttpError('Cloudinary is not configured on server.', 500)
+  }
+
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: 'hrims/profile_pictures',
+        public_id: `employee_${employeeId}_${Date.now()}`,
+        resource_type: 'image',
+      },
+      (error, result) => {
+        if (error) {
+          reject(createHttpError(error.message || 'Failed to upload avatar image.', 500))
+          return
+        }
+        resolve(result)
+      }
+    )
+
+    stream.end(buffer)
+  })
 }
 
 const buildProfileResponse = ({ employee, profile }) => {
@@ -186,5 +212,84 @@ export const deleteMyProfileDetails = async ({ actorId }) => {
 
   return {
     employee_id: actorId,
+  }
+}
+
+export const uploadMyProfileAvatar = async ({ actorId, file }) => {
+  if (!file) {
+    throw createHttpError('Profile picture file is required.', 400)
+  }
+
+  if (!file.mimetype?.startsWith('image/')) {
+    throw createHttpError('Only image files are allowed for profile picture.', 400)
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    throw createHttpError('Profile picture must be up to 5MB.', 400)
+  }
+
+  const { employee, profile: existingProfile } = await getActorAndProfile(actorId)
+  const uploaded = await uploadBufferToCloudinary({
+    buffer: file.buffer,
+    employeeId: actorId,
+  })
+
+  const avatarUrl = uploaded?.secure_url || uploaded?.url
+
+  if (!avatarUrl) {
+    throw createHttpError('Failed to get uploaded profile picture URL.', 500)
+  }
+
+  let profileRecord = existingProfile
+
+  if (!profileRecord) {
+    const { data: createdProfile, error: createError } = await createProfileRecord({
+      employee_id: actorId,
+      company_id: employee.company_id || null,
+      personal_details: {
+        profile_picture_url: avatarUrl,
+      },
+      family_details: {},
+      academic_details: {},
+      professional_details: {},
+      health_details: {},
+    })
+
+    if (createError) {
+      throw createHttpError(createError.message, 500)
+    }
+
+    profileRecord = createdProfile
+  } else {
+    const nextPersonalDetails = {
+      ...(existingProfile.personal_details || {}),
+      profile_picture_url: avatarUrl,
+    }
+
+    const { data: updatedProfile, error: updateError } = await updateProfileRecordByEmployeeId(actorId, {
+      personal_details: nextPersonalDetails,
+      updated_at: new Date().toISOString(),
+    })
+
+    if (updateError) {
+      throw createHttpError(updateError.message, 500)
+    }
+
+    profileRecord = {
+      ...profileRecord,
+      ...updatedProfile,
+      family_details: updatedProfile.family_details ?? profileRecord.family_details,
+      academic_details: updatedProfile.academic_details ?? profileRecord.academic_details,
+      professional_details: updatedProfile.professional_details ?? profileRecord.professional_details,
+      health_details: updatedProfile.health_details ?? profileRecord.health_details,
+    }
+  }
+
+  return {
+    avatar_url: avatarUrl,
+    profile: buildProfileResponse({
+      employee,
+      profile: profileRecord,
+    }),
   }
 }

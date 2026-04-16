@@ -1,4 +1,5 @@
 import { findEmployeeByEmail } from '../model/common/auth.model.js'
+import { findProfileByEmployeeId } from '../model/common/profile.model.js'
 import { comparePassword } from '../utils/password.js'
 import { signAuthToken } from '../utils/jwt.js'
 import { sanitizeEmployee } from '../utils/user.js'
@@ -38,8 +39,14 @@ export const loginWithPassword = async ({ email, password }) => {
     company_id: employee.company_id,
   })
 
+  const { data: profile } = await findProfileByEmployeeId(employee.id)
+  const safeEmployee = sanitizeEmployee(employee)
+
   return {
     token,
-    user: sanitizeEmployee(employee),
+    user: {
+      ...safeEmployee,
+      profile_picture_url: profile?.personal_details?.profile_picture_url || null,
+    },
   }
 }

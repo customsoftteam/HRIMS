@@ -2,6 +2,7 @@ import {
   createMyProfileDetails,
   deleteMyProfileDetails,
   getMyProfileDetails,
+  uploadMyProfileAvatar,
   updateMyProfileDetails,
 } from '../../services/profile.service.js'
 
@@ -75,6 +76,26 @@ export const deleteMyProfile = async (req, res) => {
     return res.status(error.statusCode || 500).json({
       success: false,
       message: error.message || 'Failed to delete profile.',
+    })
+  }
+}
+
+export const uploadProfileAvatar = async (req, res) => {
+  try {
+    const data = await uploadMyProfileAvatar({
+      actorId: req.user.sub,
+      file: req.file,
+    })
+
+    return res.json({
+      success: true,
+      message: 'Profile picture uploaded successfully.',
+      data,
+    })
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || 'Failed to upload profile picture.',
     })
   }
 }

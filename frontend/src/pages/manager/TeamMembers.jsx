@@ -268,12 +268,21 @@ const TeamMembers = () => {
           <section className="grid gap-4 md:grid-cols-2">
             {members.map((member) => (
               <article key={member.id} className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
-                <div className="space-y-1">
-                  <h3 className="text-base font-semibold text-black">
-                    {member.employee?.first_name} {member.employee?.last_name}
-                  </h3>
-                  <p className="text-xs text-black/60">{member.employee?.employee_code || 'NA'}</p>
-                  <p className="text-sm text-black/70">{member.employee?.email || 'NA'}</p>
+                <div className="flex items-center gap-3">
+                  {member.employee?.profile_picture_url ? (
+                    <img src={member.employee.profile_picture_url} alt={`${member.employee?.first_name || ''} ${member.employee?.last_name || ''}`.trim() || 'Member'} className="size-12 rounded-full border border-black/10 object-cover" />
+                  ) : (
+                    <div className="flex size-12 items-center justify-center rounded-full border border-black/10 bg-[#f5f6fa] text-sm font-semibold text-black/60">
+                      {`${member.employee?.first_name || ''}${member.employee?.last_name || ''}`.trim().slice(0, 1).toUpperCase() || 'U'}
+                    </div>
+                  )}
+                  <div className="space-y-1">
+                    <h3 className="text-base font-semibold text-black">
+                      {member.employee?.first_name} {member.employee?.last_name}
+                    </h3>
+                    <p className="text-xs text-black/60">{member.employee?.employee_code || 'NA'}</p>
+                    <p className="text-sm text-black/70">{member.employee?.email || 'NA'}</p>
+                  </div>
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-2 text-xs">

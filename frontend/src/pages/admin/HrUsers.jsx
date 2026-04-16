@@ -277,7 +277,7 @@ function HrUsersPage() {
                 <tbody className="divide-y divide-black/5">
                   {loading ? <tr><td colSpan={5} className="px-4 py-4 text-black/50">Loading...</td></tr> : filteredRows.length ? filteredRows.map((row) => (
                     <tr key={row.id}>
-                      <td className="px-4 py-3">{row.first_name} {row.last_name || ''}<div className="text-xs text-black/50">{row.email}</div></td>
+                      <td className="px-4 py-3"><div className="flex items-center gap-3">{row.profile_picture_url ? <img src={row.profile_picture_url} alt={`${row.first_name || ''} ${row.last_name || ''}`.trim() || 'User'} className="size-10 rounded-full border border-black/10 object-cover" /> : <div className="flex size-10 items-center justify-center rounded-full border border-black/10 bg-[#f5f6fa] text-xs font-semibold text-black/60">{`${row.first_name || ''}${row.last_name || ''}`.trim().slice(0, 1).toUpperCase() || 'U'}</div>}<div>{row.first_name} {row.last_name || ''}<div className="text-xs text-black/50">{row.email}</div></div></div></td>
                       <td className="px-4 py-3">{row.designation?.name || '-'}</td>
                       <td className="px-4 py-3">{row.assignment?.location?.metadata?.name || '-'}</td>
                       <td className="px-4 py-3">{row.assignment?.department?.metadata?.name || '-'}</td>

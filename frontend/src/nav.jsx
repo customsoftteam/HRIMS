@@ -7,6 +7,8 @@ import {
   ListTodo,
   FolderKanban,
   ClipboardCheck,
+  MessageSquare,
+  CalendarDays,
 } from 'lucide-react'
 
 const ROLE_LABELS = {
@@ -21,6 +23,34 @@ const NAV_GROUPS = {
     {
       title: 'Overview',
       items: [{ to: '/dashboard/admin', label: 'Dashboard', icon: LayoutDashboard }],
+    },
+    {
+      title: 'Profile',
+      items: [{ to: '/admin/profile', label: 'Profile', icon: Users }],
+    },
+    {
+      title: 'Communication',
+      items: [{ to: '/admin/chat', label: 'Chat', icon: MessageSquare }],
+    },
+    {
+      title: 'Updates',
+      items: [
+        { to: '/admin/updates/announcements', label: 'Announcements', icon: MessageSquare },
+        { to: '/admin/updates/notice-board', label: 'Notice Board', icon: ListTodo },
+        { to: '/admin/updates/upcoming-events', label: 'Upcoming Events', icon: CalendarDays },
+      ],
+    },
+    {
+      title: 'Calendar',
+      items: [{ to: '/admin/holiday-calendar', label: 'Holiday Calendar', icon: CalendarDays }],
+    },
+    {
+      title: 'Leave Management',
+      items: [
+        { to: '/admin/leave/setup', label: 'Setup', icon: CalendarDays },
+        { to: '/admin/leave/review', label: 'Review', icon: CalendarDays },
+        { to: '/admin/leave/requests', label: 'Requests', icon: CalendarDays },
+      ],
     },
     {
       title: 'Organization',
@@ -51,6 +81,34 @@ const NAV_GROUPS = {
       items: [{ to: '/dashboard/hr', label: 'Dashboard', icon: LayoutDashboard }],
     },
     {
+      title: 'Profile',
+      items: [{ to: '/hr/profile', label: 'Profile', icon: Users }],
+    },
+    {
+      title: 'Communication',
+      items: [{ to: '/hr/chat', label: 'Chat', icon: MessageSquare }],
+    },
+    {
+      title: 'Updates',
+      items: [
+        { to: '/hr/updates/announcements', label: 'Announcements', icon: MessageSquare },
+        { to: '/hr/updates/notice-board', label: 'Notice Board', icon: ListTodo },
+        { to: '/hr/updates/upcoming-events', label: 'Upcoming Events', icon: CalendarDays },
+      ],
+    },
+    {
+      title: 'Calendar',
+      items: [{ to: '/hr/holiday-calendar', label: 'Holiday Calendar', icon: CalendarDays }],
+    },
+    {
+      title: 'Leave Management',
+      items: [
+        { to: '/hr/leave/setup', label: 'Setup', icon: CalendarDays },
+        { to: '/hr/leave/review', label: 'Review', icon: CalendarDays },
+        { to: '/hr/leave/requests', label: 'Requests', icon: CalendarDays },
+      ],
+    },
+    {
       title: 'People',
       items: [{ to: '/hr/people/employee', label: 'Employee', icon: Users }],
     },
@@ -66,6 +124,33 @@ const NAV_GROUPS = {
     {
       title: 'Overview',
       items: [{ to: '/dashboard/manager', label: 'Dashboard', icon: LayoutDashboard }],
+    },
+    {
+      title: 'Profile',
+      items: [{ to: '/manager/profile', label: 'Profile', icon: Users }],
+    },
+    {
+      title: 'Communication',
+      items: [{ to: '/manager/chat', label: 'Chat', icon: MessageSquare }],
+    },
+    {
+      title: 'Updates',
+      items: [
+        { to: '/manager/updates/announcements', label: 'Announcements', icon: MessageSquare },
+        { to: '/manager/updates/notice-board', label: 'Notice Board', icon: ListTodo },
+        { to: '/manager/updates/upcoming-events', label: 'Upcoming Events', icon: CalendarDays },
+      ],
+    },
+    {
+      title: 'Calendar',
+      items: [{ to: '/manager/holiday-calendar', label: 'Holiday Calendar', icon: CalendarDays }],
+    },
+    {
+      title: 'Leave Management',
+      items: [
+        { to: '/manager/leave/review', label: 'Review', icon: CalendarDays },
+        { to: '/manager/leave/requests', label: 'Requests', icon: CalendarDays },
+      ],
     },
     {
       title: 'Projects',
@@ -85,12 +170,38 @@ const NAV_GROUPS = {
   employee: [
     {
       title: 'Overview',
+      items: [{ to: '/dashboard/employee', label: 'Dashboard', icon: LayoutDashboard }],
+    },
+    {
+      title: 'Work',
       items: [
-        { to: '/dashboard/employee', label: 'Dashboard', icon: LayoutDashboard },
         { to: '/employee/projects', label: 'Projects', icon: FolderKanban },
         { to: '/employee/tasks', label: 'Tasks', icon: ClipboardCheck },
-        { to: '/employee/profile', label: 'Profile', icon: Users },
       ],
+    },
+    {
+      title: 'Profile',
+      items: [{ to: '/employee/profile', label: 'Profile', icon: Users }],
+    },
+    {
+      title: 'Communication',
+      items: [{ to: '/employee/chat', label: 'Chat', icon: MessageSquare }],
+    },
+    {
+      title: 'Updates',
+      items: [
+        { to: '/employee/updates/announcements', label: 'Announcements', icon: MessageSquare },
+        { to: '/employee/updates/notice-board', label: 'Notice Board', icon: ListTodo },
+        { to: '/employee/updates/upcoming-events', label: 'Upcoming Events', icon: CalendarDays },
+      ],
+    },
+    {
+      title: 'Calendar',
+      items: [{ to: '/employee/holiday-calendar', label: 'Holiday Calendar', icon: CalendarDays }],
+    },
+    {
+      title: 'Leave Management',
+      items: [{ to: '/employee/leave/requests', label: 'Requests', icon: CalendarDays }],
     },
   ],
 }
@@ -113,7 +224,7 @@ function SidebarNav({ role = 'employee', onNavigate, collapsed = false }) {
         )}
       </div>
 
-      <div className="space-y-6">
+      <div className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain pr-1">
         {groups.map((group) => (
           <div key={group.title} className="space-y-2">
             {!collapsed ? (

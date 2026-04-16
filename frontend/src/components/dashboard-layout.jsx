@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Menu, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { API_BASE_URL } from '../utils/api.js'
 import SidebarNav from '../nav.jsx'
 import {
   clearAuthSession,
@@ -27,13 +28,12 @@ function StatCard({ label, value, tone = 'default' }) {
 function DashboardLayout({ role, title, subtitle, stats, highlights, children }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [headerUser, setHeaderUser] = useState(() => getAuthUser())
   const navigate = useNavigate()
-  const authUser = getAuthUser()
-  const profileSeed = authUser?.first_name || authUser?.email || role
-  const profileImageUrl = useMemo(
-    () => `https://api.dicebear.com/9.x/initials/svg?seed=${profileSeed}`,
-    [profileSeed]
-  )
+  const profileSeed = headerUser?.first_name || headerUser?.email || role
+  const profileImageUrl = useMemo(() => {
+    return headerUser?.profile_picture_url || `https://api.dicebear.com/9.x/initials/svg?seed=${profileSeed}`
+  }, [headerUser?.profile_picture_url, profileSeed])
 
   const closeSidebar = () => setMobileSidebarOpen(false)
 
@@ -42,6 +42,54 @@ function DashboardLayout({ role, title, subtitle, stats, highlights, children })
       navigate('/login', { replace: true })
     }
   }, [navigate])
+
+  useEffect(() => {
+    const refreshProfilePicture = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/profile/me`, {
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+        })
+
+        if (!response.ok) {
+          return
+        }
+
+        const payload = await response.json()
+        const avatarUrl = payload?.data?.profile?.personal_details?.profile_picture_url || null
+
+        if (avatarUrl) {
+          const currentUser = getAuthUser()
+          if (currentUser && currentUser.profile_picture_url !== avatarUrl) {
+            const nextUser = { ...currentUser, profile_picture_url: avatarUrl }
+            localStorage.setItem('hrims_auth_user', JSON.stringify(nextUser))
+            setHeaderUser(nextUser)
+          }
+        }
+      } catch {
+        // Keep the fallback avatar if profile lookup fails.
+      }
+    }
+
+    refreshProfilePicture()
+
+    const handleProfileUpdate = (event) => {
+      if (event.detail?.profile_picture_url) {
+        const currentUser = getAuthUser()
+        if (!currentUser) {
+          return
+        }
+
+        const nextUser = { ...currentUser, profile_picture_url: event.detail.profile_picture_url }
+        localStorage.setItem('hrims_auth_user', JSON.stringify(nextUser))
+        setHeaderUser(nextUser)
+      }
+    }
+
+    window.addEventListener('hrims-profile-updated', handleProfileUpdate)
+    return () => window.removeEventListener('hrims-profile-updated', handleProfileUpdate)
+  }, [])
 
   const handleLogout = () => {
     const confirmed = window.confirm('Are you sure you want to logout?')
@@ -75,7 +123,7 @@ function DashboardLayout({ role, title, subtitle, stats, highlights, children })
           </>
         )}
 
-        <div className="flex h-screen flex-1 flex-col overflow-hidden">
+        <div className="flex h-screen min-h-0 flex-1 flex-col overflow-hidden">
           <header className="sticky top-0 z-30 border-b border-black/10 bg-black text-white shadow-lg shadow-black/10">
             <div className="flex items-center justify-between px-4 py-3 md:px-8">
               <div className="flex items-center gap-3">
@@ -104,8 +152,8 @@ function DashboardLayout({ role, title, subtitle, stats, highlights, children })
               <div className="flex items-center gap-3">
                 <img
                   src={profileImageUrl}
-                  alt="Profile"
-                  className="size-10 rounded-full border border-white/10 bg-white/10"
+                  alt={headerUser?.first_name ? `${headerUser.first_name} profile` : 'Profile'}
+                  className="size-10 rounded-full border border-white/10 bg-white/10 object-cover"
                 />
                 <button
                   type="button"
@@ -119,7 +167,7 @@ function DashboardLayout({ role, title, subtitle, stats, highlights, children })
             </div>
           </header>
 
-          <main className="flex-1 overflow-y-auto bg-[#f4f4f5] p-4 md:p-8">
+          <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#f4f4f5] p-4 md:p-8">
             {children ? (
               <div className="space-y-6">
                 {stats?.length ? (
