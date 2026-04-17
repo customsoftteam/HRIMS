@@ -210,25 +210,27 @@ function SidebarNav({ role = 'employee', onNavigate, collapsed = false }) {
   const groups = NAV_GROUPS[role] ?? NAV_GROUPS.employee
 
   return (
-    <aside className={`flex h-full flex-col overflow-hidden border-r border-white/10 bg-black p-4 text-white shadow-2xl shadow-black/30 transition-all duration-200 ${collapsed ? 'w-20' : 'w-72'}`}>
-      <div className="mb-8 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+    <aside className={`flex h-full flex-col overflow-hidden border-r border-emerald-900/30 bg-gradient-to-b from-slate-900 to-emerald-950 p-4 text-white shadow-2xl shadow-emerald-950/50 transition-all duration-200 ${collapsed ? 'w-20' : 'w-72'}`}>
+      <div className="mb-8 rounded-2xl border-2 border-emerald-400 bg-gradient-to-br from-emerald-600/20 to-teal-600/20 p-4 backdrop-blur-xl shadow-lg shadow-emerald-500/25">
         {collapsed ? (
-          <p className="text-center text-xs font-semibold text-white/70">HR</p>
+          <p className="text-center text-xs font-bold text-emerald-100">HO</p>
         ) : (
           <>
-            <p className="text-xs uppercase tracking-[0.35em] text-white/50">HRIMS</p>
-            <p className="mt-2 text-lg font-semibold text-white">
+            <p className="text-sm font-bold uppercase tracking-[0.4em] text-emerald-100 drop-shadow-lg">HRIMS Orbit</p>
+            <p className="mt-2 text-lg font-bold text-white drop-shadow">
               {ROLE_LABELS[role]} Panel
             </p>
           </>
         )}
       </div>
 
-      <div className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain pr-1">
+      <div
+        className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      >
         {groups.map((group) => (
           <div key={group.title} className="space-y-2">
             {!collapsed ? (
-              <p className="px-2 text-xs font-medium uppercase tracking-[0.2em] text-white/40">
+              <p className="px-2 text-xs font-bold uppercase tracking-[0.2em] text-emerald-300">
                 {group.title}
               </p>
             ) : null}
@@ -240,11 +242,11 @@ function SidebarNav({ role = 'employee', onNavigate, collapsed = false }) {
                 title={collapsed ? link.label : undefined}
                 className={({ isActive }) =>
                   [
-                    'flex items-center rounded-xl px-3 py-2 text-sm transition-all duration-200',
+                    'flex items-center rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200',
                     collapsed ? 'justify-center' : 'gap-2',
                     isActive
-                      ? 'bg-white text-black shadow-sm'
-                      : 'text-white/80 hover:bg-white/10 hover:text-white',
+                      ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/35'
+                      : 'text-slate-200 hover:bg-emerald-900/40 hover:text-white',
                   ].join(' ')
                 }
               >
@@ -257,8 +259,9 @@ function SidebarNav({ role = 'employee', onNavigate, collapsed = false }) {
       </div>
 
       {!collapsed ? (
-        <div className="mt-auto rounded-2xl border border-white/10 bg-white/5 p-3 text-xs text-white/60 backdrop-blur">
-          Signed in as <span className="font-medium text-white">{ROLE_LABELS[role]}</span>
+        <div className="mt-auto rounded-2xl border border-emerald-400/25 bg-emerald-500/10 p-3 text-xs text-slate-200 backdrop-blur">
+          Signed in as <span className="font-medium text-emerald-200">{ROLE_LABELS[role]}</span>
+          <p className="mt-2 text-[10px] text-emerald-100/80">HRIMS_Orbit_1.0.1_17 Apr 2026_build</p>
         </div>
       ) : null}
     </aside>

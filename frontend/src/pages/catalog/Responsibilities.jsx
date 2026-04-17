@@ -32,6 +32,7 @@ function ResponsibilitiesPage({ role = 'admin' }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [editingId, setEditingId] = useState(null)
 
   const authHeaders = useMemo(
     () => ({
@@ -128,6 +129,7 @@ function ResponsibilitiesPage({ role = 'admin' }) {
 
   const resetForm = () => {
     setForm(EMPTY_FORM)
+    setEditingId(null)
   }
 
   const handleDelete = async (row) => {
@@ -156,6 +158,20 @@ function ResponsibilitiesPage({ role = 'admin' }) {
     }
   }
 
+  const handleEdit = (row) => {
+    setForm({
+      designation_id: row.designation_id,
+      title: row.title,
+      description: row.description || '',
+    })
+    setScope({
+      plant_office_id: row.designation?.location?.id || '',
+      department_id: row.designation?.department?.id || '',
+    })
+    setEditingId(row.id)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   const handleSubmit = async (event) => {
     event.preventDefault()
     setErrorMessage('')
@@ -174,8 +190,11 @@ function ResponsibilitiesPage({ role = 'admin' }) {
     setSaving(true)
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/catalog/responsibilities`, {
-        method: 'POST',
+      const url = editingId ? `${API_BASE_URL}/api/catalog/responsibilities/${editingId}` : `${API_BASE_URL}/api/catalog/responsibilities`
+      const method = editingId ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method,
         headers: {
           ...authHeaders,
           'Content-Type': 'application/json',
@@ -185,10 +204,10 @@ function ResponsibilitiesPage({ role = 'admin' }) {
 
       const payload = await response.json()
       if (!response.ok) {
-        throw new Error(payload?.message || 'Failed to save responsibility.')
+        throw new Error(payload?.message || `Failed to ${editingId ? 'update' : 'save'} responsibility.`)
       }
 
-      setSuccessMessage('Responsibility created successfully.')
+      setSuccessMessage(`Responsibility ${editingId ? 'updated' : 'created'} successfully.`)
       resetForm()
       await fetchRows()
     } catch (error) {
@@ -225,7 +244,7 @@ function ResponsibilitiesPage({ role = 'admin' }) {
 
         <section className="rounded-2xl border border-black/10 bg-[#fafafa] p-4">
           <div>
-            <h3 className="text-lg font-semibold text-black">Create Responsibility</h3>
+            <h3 className="text-lg font-semibold text-black">{editingId ? 'Edit Responsibility' : 'Create Responsibility'}</h3>
             <p className="mt-1 text-sm text-black/60">The scope filters keep the designation dropdown relevant for admin, HR, and manager logins.</p>
           </div>
 
@@ -264,7 +283,7 @@ function ResponsibilitiesPage({ role = 'admin' }) {
             </div>
             <div className="md:col-span-2 flex gap-2 pt-1">
               <button type="submit" disabled={saving} className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white">
-                {saving ? 'Saving...' : 'Create Responsibility'}
+                {saving ? 'Saving...' : editingId ? 'Update Responsibility' : 'Create Responsibility'}
               </button>
               <button type="button" onClick={resetForm} className="rounded-xl border border-black/15 px-4 py-2 text-sm">
                 Clear
@@ -301,7 +320,7 @@ function ResponsibilitiesPage({ role = 'admin' }) {
                     <tr key={row.id}>
                       <td className="px-4 py-3">
                         <div className="font-medium text-black">{row.title}</div>
-                        <div className="text-xs text-black/50">{row.description || '-'}</div>
+                        <div className="whitespace-pre-wrap text-xs text-black/50">{row.description || '-'}</div>
                       </td>
                       <td className="px-4 py-3 text-black/70">{row.designation?.name || '-'}</td>
                       <td className="px-4 py-3 text-black/70">
@@ -309,9 +328,14 @@ function ResponsibilitiesPage({ role = 'admin' }) {
                         <div className="text-xs text-black/45">{row.designation?.department?.name || '-'}</div>
                       </td>
                       <td className="px-4 py-3">
-                        <button onClick={() => handleDelete(row)} className="rounded-lg border border-rose-200 px-3 py-1 text-xs text-rose-700">
-                          Delete
-                        </button>
+                        <div className="flex gap-2">
+                          <button onClick={() => handleEdit(row)} className="rounded-lg border border-blue-200 px-3 py-1 text-xs text-blue-700">
+                            Edit
+                          </button>
+                          <button onClick={() => handleDelete(row)} className="rounded-lg border border-rose-200 px-3 py-1 text-xs text-rose-700">
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

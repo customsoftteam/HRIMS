@@ -304,6 +304,43 @@ function LeaveRequestsPage() {
 
             <div className="mt-6 space-y-4">
               <div>
+                <h4 className="text-sm font-semibold text-black">Approved Leaves</h4>
+                <p className="mt-1 text-xs text-black/50">Leaves that were approved by HR, Manager, or Admin.</p>
+                <div className="mt-3 overflow-x-auto rounded-xl border border-black/10">
+                  <table className="min-w-full divide-y divide-black/10 text-sm">
+                    <thead className="bg-[#f8f8fa] text-left text-black/70">
+                      <tr>
+                        <th className="px-3 py-2 font-semibold">Leave Type</th>
+                        <th className="px-3 py-2 font-semibold">From</th>
+                        <th className="px-3 py-2 font-semibold">To</th>
+                        <th className="px-3 py-2 font-semibold">Days</th>
+                        <th className="px-3 py-2 font-semibold">Reason</th>
+                        <th className="px-3 py-2 font-semibold">Status</th>
+                        <th className="px-3 py-2 font-semibold">Approved Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-black/5">
+                      {previousRequests.filter((request) => request.status === 'approved').length ? previousRequests.filter((request) => request.status === 'approved').map((request) => (
+                        <tr key={request.id} className="hover:bg-emerald-50/50 transition">
+                          <td className="px-3 py-2">{request.leave_type?.name || '-'}</td>
+                          <td className="px-3 py-2">{formatDate(request.start_date)}</td>
+                          <td className="px-3 py-2">{formatDate(request.end_date)}</td>
+                          <td className="px-3 py-2">{request.total_days}</td>
+                          <td className="px-3 py-2">{request.reason}</td>
+                          <td className="px-3 py-2">
+                            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                              {request.status}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2">{formatDate(request.approved_at || request.updated_at)}</td>
+                        </tr>
+                      )) : <tr><td colSpan={7} className="px-3 py-3 text-black/50">No approved leaves yet.</td></tr>}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div>
                 <h4 className="text-sm font-semibold text-black">Pending Requests</h4>
                 <div className="mt-3 overflow-x-auto rounded-xl border border-black/10">
                   <table className="min-w-full divide-y divide-black/10 text-sm">

@@ -24,10 +24,9 @@ import { setIOInstance } from './socket/io.instance.js'
 const app = express()
 const httpServer = createServer(app)
 const port = process.env.PORT || 4000
-const socketCorsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173'
 const io = new SocketIOServer(httpServer, {
   cors: {
-    origin: socketCorsOrigin,
+    origin: (_origin, callback) => callback(null, true),
     methods: ['GET', 'POST'],
   },
 })
@@ -37,7 +36,9 @@ setIOInstance(io)
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    origin: function (origin, callback) {
+      callback(null, true); // allow all origins
+    },
   })
 )
 app.use(express.json())

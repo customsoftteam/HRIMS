@@ -28,6 +28,7 @@ function LeaveReviewPage() {
   const [successMessage, setSuccessMessage] = useState('')
   const [balances, setBalances] = useState([])
   const [approvalRequests, setApprovalRequests] = useState([])
+  const [approvedLeaves, setApprovedLeaves] = useState([])
   const [allocationEmployees, setAllocationEmployees] = useState([])
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('')
 
@@ -60,6 +61,19 @@ function LeaveReviewPage() {
     setApprovalRequests(payload.data || [])
   }
 
+  const fetchApprovedLeaves = async () => {
+    if (!(isManager || isAdminOrHr)) {
+      setApprovedLeaves([])
+      return
+    }
+
+    const scope = isAdminOrHr ? 'company' : 'team'
+    const response = await fetch(`${API_BASE_URL}/api/leave/requests?scope=${scope}&status=approved`, { headers: authHeaders })
+    const payload = await response.json()
+    if (!response.ok) throw new Error(payload?.message || 'Failed to fetch approved leaves.')
+    setApprovedLeaves(payload.data || [])
+  }
+
   const fetchAllocationEmployees = async () => {
     if (!isAdminOrHr) {
       setAllocationEmployees([])
@@ -79,7 +93,7 @@ function LeaveReviewPage() {
   }
 
   const reload = async () => {
-    await Promise.all([fetchApprovalRequests(), fetchAllocationEmployees()])
+    await Promise.all([fetchApprovalRequests(), fetchApprovedLeaves(), fetchAllocationEmployees()])
     if (isAdminOrHr) {
       await fetchBalances(selectedEmployeeId)
     }
@@ -131,7 +145,7 @@ function LeaveReviewPage() {
       if (!response.ok) throw new Error(payload?.message || 'Failed to submit decision.')
 
       setSuccessMessage(`Leave request ${decision}d successfully.`)
-      await Promise.all([fetchApprovalRequests(), isAdminOrHr ? fetchBalances(selectedEmployeeId) : Promise.resolve()])
+      await Promise.all([fetchApprovalRequests(), fetchApprovedLeaves(), isAdminOrHr ? fetchBalances(selectedEmployeeId) : Promise.resolve()])
     } catch (error) {
       setErrorMessage(error.message)
     }
@@ -249,42 +263,78 @@ function LeaveReviewPage() {
         )}
 
         {(isManager || isAdminOrHr) ? (
-          <section className="rounded-2xl border border-black/10 bg-white p-5">
-            <h3 className="text-lg font-semibold text-black">Pending Approvals</h3>
-            <div className="mt-4 overflow-x-auto">
-              <table className="min-w-full divide-y divide-black/10 text-sm">
-                <thead className="bg-[#f8f8fa] text-left text-black/70">
-                  <tr>
-                    <th className="px-3 py-2 font-semibold">Employee</th>
-                    <th className="px-3 py-2 font-semibold">Leave Type</th>
-                    <th className="px-3 py-2 font-semibold">From</th>
-                    <th className="px-3 py-2 font-semibold">To</th>
-                    <th className="px-3 py-2 font-semibold">Days</th>
-                    <th className="px-3 py-2 font-semibold">Reason</th>
-                    <th className="px-3 py-2 font-semibold">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-black/5">
-                  {approvalRequests.length ? approvalRequests.map((request) => (
-                    <tr key={request.id}>
-                      <td className="px-3 py-2">{`${request.employee?.first_name || ''} ${request.employee?.last_name || ''}`.trim() || request.employee?.email || '-'}</td>
-                      <td className="px-3 py-2">{request.leave_type?.name || '-'}</td>
-                      <td className="px-3 py-2">{formatDate(request.start_date)}</td>
-                      <td className="px-3 py-2">{formatDate(request.end_date)}</td>
-                      <td className="px-3 py-2">{request.total_days}</td>
-                      <td className="px-3 py-2">{request.reason}</td>
-                      <td className="px-3 py-2">
-                        <div className="flex gap-2">
-                          <button onClick={() => handleDecision(request.id, 'approve')} className="rounded-lg border border-emerald-200 px-2 py-1 text-xs text-emerald-700">Approve</button>
-                          <button onClick={() => handleDecision(request.id, 'reject')} className="rounded-lg border border-rose-200 px-2 py-1 text-xs text-rose-700">Reject</button>
-                        </div>
-                      </td>
+          <>
+            <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+              <h3 className="text-lg font-semibold text-emerald-700">Approved Leaves</h3>
+              <p className="mt-1 text-sm text-black/60">Previously approved leave requests with complete details.</p>
+              <div className="mt-4 overflow-x-auto">
+                <table className="min-w-full divide-y divide-emerald-200 text-sm">
+                  <thead className="bg-emerald-100 text-left text-black/70">
+                    <tr>
+                      <th className="px-3 py-2 font-semibold">Employee</th>
+                      <th className="px-3 py-2 font-semibold">Leave Type</th>
+                      <th className="px-3 py-2 font-semibold">From</th>
+                      <th className="px-3 py-2 font-semibold">To</th>
+                      <th className="px-3 py-2 font-semibold">Days</th>
+                      <th className="px-3 py-2 font-semibold">Reason</th>
+                      <th className="px-3 py-2 font-semibold">Approved Date</th>
                     </tr>
-                  )) : <tr><td colSpan={7} className="px-3 py-3 text-black/50">No pending approvals.</td></tr>}
-                </tbody>
-              </table>
-            </div>
-          </section>
+                  </thead>
+                  <tbody className="divide-y divide-emerald-100">
+                    {approvedLeaves.length ? approvedLeaves.map((request) => (
+                      <tr key={request.id} className="hover:bg-emerald-100/50 transition">
+                        <td className="px-3 py-2 font-medium">{`${request.employee?.first_name || ''} ${request.employee?.last_name || ''}`.trim() || request.employee?.email || '-'}</td>
+                        <td className="px-3 py-2 font-medium text-emerald-700">{request.leave_type?.name || '-'}</td>
+                        <td className="px-3 py-2">{formatDate(request.start_date)}</td>
+                        <td className="px-3 py-2">{formatDate(request.end_date)}</td>
+                        <td className="px-3 py-2 font-semibold text-emerald-700">{request.total_days}</td>
+                        <td className="px-3 py-2">{request.reason}</td>
+                        <td className="px-3 py-2 text-emerald-700 font-medium">{formatDate(request.approved_at || request.updated_at)}</td>
+                      </tr>
+                    )) : <tr><td colSpan={7} className="px-3 py-3 text-black/50">No approved leaves yet.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-black/10 bg-white p-5">
+              <h3 className="text-lg font-semibold text-black">Pending Approvals</h3>
+              <p className="mt-1 text-sm text-black/60">Leave requests awaiting your decision.</p>
+              <div className="mt-4 overflow-x-auto">
+                <table className="min-w-full divide-y divide-black/10 text-sm">
+                  <thead className="bg-[#f8f8fa] text-left text-black/70">
+                    <tr>
+                      <th className="px-3 py-2 font-semibold">Employee</th>
+                      <th className="px-3 py-2 font-semibold">Leave Type</th>
+                      <th className="px-3 py-2 font-semibold">From</th>
+                      <th className="px-3 py-2 font-semibold">To</th>
+                      <th className="px-3 py-2 font-semibold">Days</th>
+                      <th className="px-3 py-2 font-semibold">Reason</th>
+                      <th className="px-3 py-2 font-semibold">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-black/5">
+                    {approvalRequests.length ? approvalRequests.map((request) => (
+                      <tr key={request.id}>
+                        <td className="px-3 py-2">{`${request.employee?.first_name || ''} ${request.employee?.last_name || ''}`.trim() || request.employee?.email || '-'}</td>
+                        <td className="px-3 py-2">{request.leave_type?.name || '-'}</td>
+                        <td className="px-3 py-2">{formatDate(request.start_date)}</td>
+                        <td className="px-3 py-2">{formatDate(request.end_date)}</td>
+                        <td className="px-3 py-2">{request.total_days}</td>
+                        <td className="px-3 py-2">{request.reason}</td>
+                        <td className="px-3 py-2">
+                          <div className="flex gap-2">
+                            <button onClick={() => handleDecision(request.id, 'approve')} className="rounded-lg border border-emerald-200 px-2 py-1 text-xs text-emerald-700">Approve</button>
+                            <button onClick={() => handleDecision(request.id, 'reject')} className="rounded-lg border border-rose-200 px-2 py-1 text-xs text-rose-700">Reject</button>
+                          </div>
+                        </td>
+                      </tr>
+                    )) : <tr><td colSpan={7} className="px-3 py-3 text-black/50">No pending approvals.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </>
         ) : null}
       </div>
     </DashboardLayout>

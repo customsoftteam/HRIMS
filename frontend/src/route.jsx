@@ -1,5 +1,6 @@
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom'
 import LoginPage from './pages/Login.jsx'
+import LandingPage from './pages/Landing.jsx'
 import SetupCompanyAdminPage from './pages/platform/SetupCompanyAdmin.jsx'
 import NotFoundPage from './pages/NotFound.jsx'
 import AdminDashboardPage from './pages/admin/AdminDashboard.jsx'
@@ -29,7 +30,7 @@ import CatalogResponsibilitiesPage from './pages/catalog/Responsibilities.jsx'
 import WorkplaceUpdatesPage from './pages/updates/WorkplaceUpdatesPage.jsx'
 
 const router = createBrowserRouter([
-  { path: '/', element: <Navigate to="/login" replace /> },
+  { path: '/', element: <LandingPage /> },
   { path: '/login', element: <LoginPage /> },
   { path: '/setup/company-admin', element: <SetupCompanyAdminPage /> },
   { path: '/dashboard/admin', element: <AdminDashboardPage /> },
