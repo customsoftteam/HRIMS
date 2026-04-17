@@ -9,6 +9,7 @@ import {
   ClipboardCheck,
   MessageSquare,
   CalendarDays,
+  BookOpen,
 } from 'lucide-react'
 
 const ROLE_LABELS = {
@@ -51,6 +52,10 @@ const NAV_GROUPS = {
         { to: '/admin/leave/review', label: 'Review', icon: CalendarDays },
         { to: '/admin/leave/requests', label: 'Requests', icon: CalendarDays },
       ],
+    },
+    {
+      title: 'Training',
+      items: [{ to: '/admin/training', label: 'Management', icon: BookOpen }],
     },
     {
       title: 'Organization',
@@ -109,6 +114,13 @@ const NAV_GROUPS = {
       ],
     },
     {
+      title: 'Training',
+      items: [
+        { to: '/hr/training', label: 'Management', icon: BookOpen },
+        { to: '/hr/training/my', label: 'My Training', icon: BookOpen },
+      ],
+    },
+    {
       title: 'People',
       items: [{ to: '/hr/people/employee', label: 'Employee', icon: Users }],
     },
@@ -150,6 +162,13 @@ const NAV_GROUPS = {
       items: [
         { to: '/manager/leave/review', label: 'Review', icon: CalendarDays },
         { to: '/manager/leave/requests', label: 'Requests', icon: CalendarDays },
+      ],
+    },
+    {
+      title: 'Training',
+      items: [
+        { to: '/manager/training', label: 'Overview', icon: BookOpen },
+        { to: '/manager/training/my', label: 'My Training', icon: BookOpen },
       ],
     },
     {
@@ -202,6 +221,10 @@ const NAV_GROUPS = {
     {
       title: 'Leave Management',
       items: [{ to: '/employee/leave/requests', label: 'Requests', icon: CalendarDays }],
+    },
+    {
+      title: 'Learning',
+      items: [{ to: '/employee/training', label: 'Training', icon: BookOpen }],
     },
   ],
 }

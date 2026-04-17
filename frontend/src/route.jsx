@@ -25,6 +25,8 @@ import LeaveSetupPage from './pages/leave/LeaveSetup.jsx'
 import LeaveReviewPage from './pages/leave/LeaveReview.jsx'
 import LeaveRequestsPage from './pages/leave/LeaveRequests.jsx'
 import HolidayCalendarPage from './pages/leave/HolidayCalendar.jsx'
+import TrainingPage from './pages/training/Training.jsx'
+import TrainingManagementPage from './pages/training/TrainingManagement.jsx'
 import CatalogDesignationsPage from './pages/catalog/Designations.jsx'
 import CatalogResponsibilitiesPage from './pages/catalog/Responsibilities.jsx'
 import WorkplaceUpdatesPage from './pages/updates/WorkplaceUpdatesPage.jsx'
@@ -51,6 +53,7 @@ const router = createBrowserRouter([
   { path: '/admin/leave/review', element: <LeaveReviewPage /> },
   { path: '/admin/leave/requests', element: <LeaveRequestsPage /> },
   { path: '/admin/holiday-calendar', element: <HolidayCalendarPage /> },
+  { path: '/admin/training', element: <TrainingManagementPage /> },
   { path: '/dashboard/hr', element: <HrDashboardPage /> },
   { path: '/hr/people/employee', element: <HrEmployeeUsersPage /> },
   { path: '/hr/catalog/designations', element: <CatalogDesignationsPage role="hr" /> },
@@ -64,6 +67,8 @@ const router = createBrowserRouter([
   { path: '/hr/leave/setup', element: <LeaveSetupPage /> },
   { path: '/hr/leave/review', element: <LeaveReviewPage /> },
   { path: '/hr/leave/requests', element: <LeaveRequestsPage /> },
+  { path: '/hr/training', element: <TrainingManagementPage /> },
+  { path: '/hr/training/my', element: <TrainingPage /> },
   { path: '/hr/holiday-calendar', element: <HolidayCalendarPage /> },
   { path: '/dashboard/manager', element: <ManagerDashboardPage /> },
   { path: '/manager/projects', element: <ProjectsList /> },
@@ -80,6 +85,8 @@ const router = createBrowserRouter([
   { path: '/manager/leave', element: <Navigate to="/manager/leave/review" replace /> },
   { path: '/manager/leave/review', element: <LeaveReviewPage /> },
   { path: '/manager/leave/requests', element: <LeaveRequestsPage /> },
+  { path: '/manager/training', element: <TrainingManagementPage /> },
+  { path: '/manager/training/my', element: <TrainingPage /> },
   { path: '/manager/holiday-calendar', element: <HolidayCalendarPage /> },
   { path: '/dashboard/employee', element: <EmployeeDashboardPage /> },
   { path: '/employee/projects', element: <EmployeeProjectsPage /> },
@@ -91,6 +98,7 @@ const router = createBrowserRouter([
   { path: '/employee/updates/upcoming-events', element: <WorkplaceUpdatesPage role="employee" section="upcomingEvents" /> },
   { path: '/employee/leave', element: <Navigate to="/employee/leave/requests" replace /> },
   { path: '/employee/leave/requests', element: <LeaveRequestsPage /> },
+  { path: '/employee/training', element: <TrainingPage /> },
   { path: '/employee/holiday-calendar', element: <HolidayCalendarPage /> },
   { path: '*', element: <NotFoundPage /> },
 ])

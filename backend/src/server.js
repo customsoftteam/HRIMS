@@ -9,6 +9,7 @@ import profileRoute from './route/common/profile.route.js'
 import catalogRoute from './route/common/catalog.route.js'
 import chatRoute from './route/common/chat.route.js'
 import leaveRoute from './route/common/leave.route.js'
+import trainingRoute from './route/common/training.route.js'
 import updatesRoute from './route/common/updates.route.js'
 import adminRoute from './route/admin/admin.route.js'
 import adminUserRoute from './route/admin/user.route.js'
@@ -47,6 +48,7 @@ app.use('/api/auth', authRoute)
 app.use('/api/profile', profileRoute)
 app.use('/api/catalog', catalogRoute)
 app.use('/api/chat', chatRoute)
+app.use('/api/training', trainingRoute)
 app.use('/api/leave', leaveRoute)
 app.use('/api/updates', updatesRoute)
 app.use('/api/platform/setup', platformSetupRoute)
