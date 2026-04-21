@@ -8,6 +8,8 @@ import {
   getMyTrainingAssignments,
   getTrainingPrograms,
   getTrainingReports,
+  updateTrainingProgram,
+  uploadTrainingModuleVideo,
 } from '../../services/training.service.js'
 
 export const getTrainingProgramsController = async (req, res) => {
@@ -25,6 +27,34 @@ export const createTrainingProgramController = async (req, res) => {
     return res.status(201).json({ success: true, data })
   } catch (error) {
     return res.status(error.statusCode || 500).json({ success: false, message: error.message || 'Failed to create training program.' })
+  }
+}
+
+export const updateTrainingProgramController = async (req, res) => {
+  try {
+    const data = await updateTrainingProgram({
+      actorId: req.user.sub,
+      programId: req.params.programId,
+      payload: req.body,
+    })
+    return res.json({ success: true, data })
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({ success: false, message: error.message || 'Failed to update training program.' })
+  }
+}
+
+export const uploadTrainingModuleVideoController = async (req, res) => {
+  try {
+    const data = await uploadTrainingModuleVideo({
+      actorId: req.user.sub,
+      file: req.file,
+      moduleTitle: req.body?.module_title,
+      trainingProgramName: req.body?.training_program_name,
+    })
+
+    return res.status(201).json({ success: true, data })
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({ success: false, message: error.message || 'Failed to upload training video.' })
   }
 }
 
@@ -57,7 +87,7 @@ export const getMyTrainingController = async (req, res) => {
 
 export const completeTrainingController = async (req, res) => {
   try {
-    const data = await completeTraining({ actorId: req.user.sub, assignmentId: req.params.assignmentId })
+    const data = await completeTraining({ actorId: req.user.sub, assignmentId: req.params.assignmentId, payload: req.body })
     return res.json({ success: true, data })
   } catch (error) {
     return res.status(error.statusCode || 500).json({ success: false, message: error.message || 'Failed to complete training.' })

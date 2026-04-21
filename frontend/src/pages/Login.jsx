@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ShieldCheck, LockKeyhole, Sparkles } from 'lucide-react'
 import { API_BASE_URL } from '../utils/api.js'
+import BrandLogo from '../components/BrandLogo.jsx'
 import {
   getAuthToken,
   getAuthUser,
@@ -58,6 +59,7 @@ function LoginPage() {
       <div className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-6xl overflow-hidden rounded-[2rem] border border-emerald-200/60 bg-white shadow-2xl shadow-emerald-600/10 backdrop-blur xl:grid-cols-[1.1fr_0.9fr]">
         <section className="hidden flex-col justify-between bg-gradient-to-br from-emerald-600 to-teal-500 p-8 text-white xl:flex">
           <div>
+            <BrandLogo size="lg" showText theme="dark" />
             <div className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.35em] text-white/90 backdrop-blur">
               <Sparkles className="size-4" />
               HRIMS Orbit Secure Access
@@ -95,6 +97,7 @@ function LoginPage() {
         <section className="flex items-center justify-center bg-white px-4 py-10 text-black sm:px-8">
           <div className="w-full max-w-md">
             <div className="mb-8 xl:hidden">
+              <BrandLogo size="md" showText theme="light" className="mb-5" />
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-gradient-to-r from-emerald-600 to-teal-500 px-4 py-2 text-xs uppercase tracking-[0.35em] text-white">
                 <Sparkles className="size-4" />
                 HRIMS Orbit Secure Access

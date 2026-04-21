@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom'
 import {
   ArrowRight,
   BarChart3,
-  Building2,
   Calendar,
   CheckCircle2,
   Layers3,
@@ -14,6 +13,7 @@ import {
   Users,
 } from 'lucide-react'
 import { getAuthToken, getDashboardPathForRole, getAuthUser } from '../utils/auth.js'
+import BrandLogo from '../components/BrandLogo.jsx'
 
 function LandingPage() {
   const navigate = useNavigate()
@@ -34,15 +34,7 @@ function LandingPage() {
 
       <header className="sticky top-0 z-30 border-b border-emerald-100/80 bg-white/80 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-gradient-to-br from-emerald-600 to-teal-500 p-2.5 shadow-lg shadow-emerald-500/25">
-              <Building2 className="size-5 text-white" />
-            </div>
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-emerald-700">HR Platform</p>
-              <p className="text-base font-semibold text-slate-900 sm:text-lg">HRIMS Orbit</p>
-            </div>
-          </div>
+          <BrandLogo size="sm" showText theme="light" />
 
           <div className="flex items-center gap-2 sm:gap-3">
             <a

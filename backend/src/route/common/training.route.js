@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import multer from 'multer'
 import {
   assignTrainingController,
   completeTrainingController,
@@ -9,14 +10,24 @@ import {
   getMyTrainingController,
   getTrainingProgramsController,
   getTrainingReportsController,
+  updateTrainingProgramController,
+  uploadTrainingModuleVideoController,
 } from '../../controller/common/training.controller.js'
 import { requireAuth } from '../../middleware/auth.middleware.js'
 
 const router = Router()
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 100 * 1024 * 1024,
+  },
+})
 
 // Training Programs (HR/Admin only)
 router.get('/programs', requireAuth, getTrainingProgramsController)
 router.post('/programs', requireAuth, createTrainingProgramController)
+router.patch('/programs/:programId', requireAuth, updateTrainingProgramController)
+router.post('/modules/upload-video', requireAuth, upload.single('video'), uploadTrainingModuleVideoController)
 
 // Training Assignments (HR/Admin manage, employees view their own)
 router.post('/assignments', requireAuth, assignTrainingController)

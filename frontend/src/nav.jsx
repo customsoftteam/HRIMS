@@ -11,6 +11,7 @@ import {
   CalendarDays,
   BookOpen,
 } from 'lucide-react'
+import BrandLogo from './components/BrandLogo.jsx'
 
 const ROLE_LABELS = {
   admin: 'Admin',
@@ -236,11 +237,13 @@ function SidebarNav({ role = 'employee', onNavigate, collapsed = false }) {
     <aside className={`flex h-full flex-col overflow-hidden border-r border-emerald-900/30 bg-gradient-to-b from-slate-900 to-emerald-950 p-4 text-white shadow-2xl shadow-emerald-950/50 transition-all duration-200 ${collapsed ? 'w-20' : 'w-72'}`}>
       <div className="mb-8 rounded-2xl border-2 border-emerald-400 bg-gradient-to-br from-emerald-600/20 to-teal-600/20 p-4 backdrop-blur-xl shadow-lg shadow-emerald-500/25">
         {collapsed ? (
-          <p className="text-center text-xs font-bold text-emerald-100">HO</p>
+          <div className="flex justify-center">
+            <BrandLogo size="sm" showText={false} theme="dark" />
+          </div>
         ) : (
           <>
-            <p className="text-sm font-bold uppercase tracking-[0.4em] text-emerald-100 drop-shadow-lg">HRIMS Orbit</p>
-            <p className="mt-2 text-lg font-bold text-white drop-shadow">
+            <BrandLogo size="md" showText theme="dark" />
+            <p className="mt-3 text-lg font-bold text-white drop-shadow">
               {ROLE_LABELS[role]} Panel
             </p>
           </>

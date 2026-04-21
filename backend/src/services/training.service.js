@@ -12,7 +12,9 @@ import {
   listTrainingAssignments,
   listTrainingPrograms,
   updateTrainingAssignmentStatus,
+  updateTrainingProgramRecord,
 } from '../model/common/training.model.js'
+import { cloudinary, isCloudinaryConfigured } from '../config/cloudinary.js'
 
 const createHttpError = (message, statusCode) => {
   const error = new Error(message)
@@ -38,9 +40,9 @@ const ensureActor = async (actorId) => {
   return actor
 }
 
-const ensureIsHROrAdmin = (actor) => {
-  if (actor.role !== 'admin' && actor.role !== 'hr') {
-    throw createHttpError('Only HR and Admin can manage training.', 403)
+const ensureCanManageTraining = (actor) => {
+  if (actor.role !== 'admin' && actor.role !== 'hr' && actor.role !== 'manager') {
+    throw createHttpError('Only Admin, HR, or Manager can manage training content.', 403)
   }
 }
 
@@ -90,6 +92,148 @@ const generateCertificateNumber = () => {
   return `CERT-${timestamp}-${random}`
 }
 
+const uploadBufferToCloudinary = async ({ buffer, trainingProgramName, moduleTitle }) => {
+  if (!isCloudinaryConfigured()) {
+    throw createHttpError('Cloudinary is not configured on server.', 500)
+  }
+
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: 'hrims/training_modules',
+        public_id: `${trainingProgramName || 'training'}_${moduleTitle || 'module'}_${Date.now()}`.replace(/[^a-zA-Z0-9_-]/g, '_'),
+        resource_type: 'video',
+      },
+      (error, result) => {
+        if (error) {
+          reject(createHttpError(error.message || 'Failed to upload training video.', 500))
+          return
+        }
+
+        resolve(result)
+      }
+    )
+
+    stream.end(buffer)
+  })
+}
+
+const normalizeArray = (value) => {
+  return Array.isArray(value) ? value : []
+}
+
+const normalizeModules = (modules) => {
+  const rows = normalizeArray(modules)
+    .map((module, index) => ({
+      title: String(module?.title || '').trim(),
+      content: String(module?.content || '').trim(),
+      video_url: String(module?.video_url || '').trim() || null,
+      video_public_id: String(module?.video_public_id || '').trim() || null,
+      video_duration_seconds: Number.isFinite(Number(module?.video_duration_seconds)) ? Number(module.video_duration_seconds) : null,
+      order_index: Number.isFinite(Number(module?.order_index)) ? Number(module.order_index) : index + 1,
+    }))
+    .filter((module) => module.title && module.content)
+
+  if (!rows.length) {
+    throw createHttpError('At least one training module is required.', 400)
+  }
+
+  return rows
+}
+
+export const uploadTrainingModuleVideo = async ({ actorId, file, moduleTitle, trainingProgramName }) => {
+  const actor = await ensureActor(actorId)
+  ensureCanManageTraining(actor)
+
+  if (!file) {
+    throw createHttpError('A video file is required.', 400)
+  }
+
+  const uploaded = await uploadBufferToCloudinary({
+    buffer: file.buffer,
+    trainingProgramName,
+    moduleTitle,
+  })
+
+  return {
+    video_url: uploaded.secure_url,
+    video_public_id: uploaded.public_id,
+    video_duration_seconds: Math.round(Number(uploaded.duration || 0)),
+    resource_type: uploaded.resource_type,
+  }
+}
+
+const normalizeQuizQuestions = (quizQuestions) => {
+  const rows = normalizeArray(quizQuestions)
+    .map((question, index) => ({
+      question: String(question?.question || '').trim(),
+      options: normalizeArray(question?.options).map((option) => String(option || '').trim()).filter(Boolean),
+      correct_option_index: Number(question?.correct_option_index),
+      marks: Number(question?.marks || 1),
+      order_index: Number.isFinite(Number(question?.order_index)) ? Number(question.order_index) : index + 1,
+    }))
+    .filter((question) => question.question && question.options.length >= 2)
+
+  rows.forEach((question) => {
+    if (!Number.isInteger(question.correct_option_index) || question.correct_option_index < 0 || question.correct_option_index >= question.options.length) {
+      throw createHttpError('Every quiz question must have a valid correct option index.', 400)
+    }
+
+    if (!Number.isFinite(question.marks) || question.marks <= 0) {
+      throw createHttpError('Quiz question marks must be greater than zero.', 400)
+    }
+  })
+
+  if (!rows.length) {
+    throw createHttpError('At least one quiz question is required.', 400)
+  }
+
+  return rows
+}
+
+const calculateQuizResult = ({ quizQuestions, answers }) => {
+  const questions = normalizeArray(quizQuestions)
+  const submittedAnswers = normalizeArray(answers)
+
+  let earnedMarks = 0
+  let totalMarks = 0
+
+  const responseDetails = questions.map((question, index) => {
+    const questionMarks = Number(question.marks || 1)
+    totalMarks += questionMarks
+
+    const selectedAnswer = submittedAnswers[index]
+    const selectedIndex = Number(selectedAnswer)
+    const isCorrect = Number.isInteger(selectedIndex) && selectedIndex === Number(question.correct_option_index)
+    const correctOptionIndex = Number(question.correct_option_index)
+    const selectedOptionText = Number.isInteger(selectedIndex) ? String(question.options?.[selectedIndex] || '') : ''
+    const correctOptionText = String(question.options?.[correctOptionIndex] || '')
+
+    if (isCorrect) {
+      earnedMarks += questionMarks
+    }
+
+    return {
+      question_index: index,
+      question_text: String(question.question || ''),
+      selected_option_index: Number.isInteger(selectedIndex) ? selectedIndex : null,
+      selected_option_text: selectedOptionText,
+      correct_option_index: correctOptionIndex,
+      correct_option_text: correctOptionText,
+      is_correct: isCorrect,
+      marks: questionMarks,
+    }
+  })
+
+  const score = totalMarks > 0 ? Math.round((earnedMarks / totalMarks) * 100) : 0
+
+  return {
+    score,
+    total_marks: totalMarks,
+    response_details: responseDetails,
+  }
+}
+
 // Service functions
 export const getTrainingPrograms = async ({ actorId }) => {
   const actor = await ensureActor(actorId)
@@ -106,9 +250,9 @@ export const getTrainingPrograms = async ({ actorId }) => {
 
 export const createTrainingProgram = async ({ actorId, payload }) => {
   const actor = await ensureActor(actorId)
-  ensureIsHROrAdmin(actor)
+  ensureCanManageTraining(actor)
 
-  const { name, description, category, is_mandatory } = payload
+  const { name, description, category, is_mandatory, modules, quiz_questions, passing_score } = payload
 
   if (!name || !name.trim()) {
     throw createHttpError('Training program name is required.', 400)
@@ -118,13 +262,68 @@ export const createTrainingProgram = async ({ actorId, payload }) => {
     throw createHttpError('Valid category is required (mandatory, skill-development, optional).', 400)
   }
 
+  const normalizedModules = normalizeModules(modules)
+  const normalizedQuizQuestions = normalizeQuizQuestions(quiz_questions)
+  const normalizedPassingScore = Number.isFinite(Number(passing_score)) ? Number(passing_score) : 70
+
+  if (normalizedPassingScore < 1 || normalizedPassingScore > 100) {
+    throw createHttpError('Passing score must be between 1 and 100.', 400)
+  }
+
   const { data: program, error } = await createTrainingProgramRecord({
     company_id: actor.company_id,
     name: name.trim(),
     description: description?.trim() || null,
     category,
     is_mandatory: is_mandatory || false,
+    modules: normalizedModules,
+    quiz_questions: normalizedQuizQuestions,
+    passing_score: normalizedPassingScore,
     created_by_employee_id: actor.id,
+  })
+
+  if (error) {
+    throw createHttpError(error.message, 500)
+  }
+
+  return program
+}
+
+export const updateTrainingProgram = async ({ actorId, programId, payload }) => {
+  const actor = await ensureActor(actorId)
+  ensureCanManageTraining(actor)
+
+  const existingProgram = await ensureTrainingProgramInCompany({ programId, companyId: actor.company_id })
+
+  const { name, description, category, is_mandatory, modules, quiz_questions, passing_score } = payload
+
+  if (!name || !name.trim()) {
+    throw createHttpError('Training program name is required.', 400)
+  }
+
+  if (!category || !['mandatory', 'skill-development', 'optional'].includes(category)) {
+    throw createHttpError('Valid category is required (mandatory, skill-development, optional).', 400)
+  }
+
+  const normalizedModules = normalizeModules(modules)
+  const normalizedQuizQuestions = normalizeQuizQuestions(quiz_questions)
+  const normalizedPassingScore = Number.isFinite(Number(passing_score)) ? Number(passing_score) : Number(existingProgram.passing_score || 70)
+
+  if (normalizedPassingScore < 1 || normalizedPassingScore > 100) {
+    throw createHttpError('Passing score must be between 1 and 100.', 400)
+  }
+
+  const { data: program, error } = await updateTrainingProgramRecord({
+    programId,
+    payload: {
+      name: name.trim(),
+      description: description?.trim() || null,
+      category,
+      is_mandatory: Boolean(is_mandatory),
+      modules: normalizedModules,
+      quiz_questions: normalizedQuizQuestions,
+      passing_score: normalizedPassingScore,
+    },
   })
 
   if (error) {
@@ -208,7 +407,7 @@ export const getMyTrainingAssignments = async ({ actorId }) => {
   return { pending, completed }
 }
 
-export const completeTraining = async ({ actorId, assignmentId }) => {
+export const completeTraining = async ({ actorId, assignmentId, payload }) => {
   const actor = await ensureActor(actorId)
 
   const { data: assignment, error: assignmentError } = await findTrainingAssignmentById(assignmentId)
@@ -229,20 +428,80 @@ export const completeTraining = async ({ actorId, assignmentId }) => {
     throw createHttpError('This training is already marked as completed.', 400)
   }
 
-  // Update assignment status
-  const { data: updatedAssignment, error: updateError } = await updateTrainingAssignmentStatus(
-    assignmentId,
-    {
-      completion_status: 'completed',
-      completed_at: new Date().toISOString(),
+  const { data: program, error: programError } = await findTrainingProgramById(assignment.training_program_id)
+
+  if (programError) {
+    throw createHttpError(programError.message, 500)
+  }
+
+  if (!program) {
+    throw createHttpError('Training program not found.', 404)
+  }
+
+  const answers = normalizeArray(payload?.answers)
+  const quizResult = calculateQuizResult({ quizQuestions: program.quiz_questions, answers })
+  const passingScore = Number(program.passing_score || 70)
+  const passed = quizResult.score >= passingScore
+
+  const baseUpdate = {
+    quiz_answers: answers,
+    quiz_score: quizResult.score,
+    quiz_passed: passed,
+    quiz_submitted_at: new Date().toISOString(),
+  }
+
+  if (!passed) {
+    const { data: updatedAssignment, error: updateError } = await updateTrainingAssignmentStatus(assignmentId, baseUpdate)
+
+    if (updateError) {
+      throw createHttpError(updateError.message, 500)
     }
-  )
+
+    return {
+      assignment: updatedAssignment,
+      certificate: null,
+      quiz: {
+        passed: false,
+        score: quizResult.score,
+        passing_score: passingScore,
+        total_marks: quizResult.total_marks,
+        response_details: quizResult.response_details,
+        questions: program.quiz_questions,
+      },
+    }
+  }
+
+  const { data: updatedAssignment, error: updateError } = await updateTrainingAssignmentStatus(assignmentId, {
+    ...baseUpdate,
+    completion_status: 'completed',
+    completed_at: new Date().toISOString(),
+  })
 
   if (updateError) {
     throw createHttpError(updateError.message, 500)
   }
 
-  // Create certificate
+  const { data: existingCertificate, error: certificateLookupError } = await findCertificateByAssignment(assignmentId)
+
+  if (certificateLookupError) {
+    throw createHttpError(certificateLookupError.message, 500)
+  }
+
+  if (existingCertificate) {
+    return {
+      assignment: updatedAssignment,
+      certificate: existingCertificate,
+      quiz: {
+        passed: true,
+        score: quizResult.score,
+        passing_score: passingScore,
+        total_marks: quizResult.total_marks,
+        response_details: quizResult.response_details,
+        questions: program.quiz_questions,
+      },
+    }
+  }
+
   const { data: certificate, error: certError } = await createCertificateRecord({
     assignment_id: assignmentId,
     employee_id: actor.id,
@@ -255,7 +514,18 @@ export const completeTraining = async ({ actorId, assignmentId }) => {
     throw createHttpError(certError.message, 500)
   }
 
-  return { assignment: updatedAssignment, certificate }
+  return {
+    assignment: updatedAssignment,
+    certificate,
+    quiz: {
+      passed: true,
+      score: quizResult.score,
+      passing_score: passingScore,
+      total_marks: quizResult.total_marks,
+      response_details: quizResult.response_details,
+      questions: program.quiz_questions,
+    },
+  }
 }
 
 export const getCompanyTrainingAssignments = async ({ actorId }) => {

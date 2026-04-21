@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Menu, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { API_BASE_URL } from '../utils/api.js'
+import BrandLogo from './BrandLogo.jsx'
 import SidebarNav from '../nav.jsx'
 import {
   clearAuthSession,
@@ -143,6 +144,7 @@ function DashboardLayout({ role, title, subtitle, stats, highlights, children })
                 >
                   {sidebarCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
                 </button>
+                <BrandLogo size="sm" className="hidden lg:inline-flex" />
                 <div>
                   <h1 className="text-lg font-semibold text-white md:text-xl">{title}</h1>
                   <p className="text-xs text-white/70 md:text-sm">{subtitle}</p>
